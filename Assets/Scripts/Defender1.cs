@@ -42,6 +42,6 @@ public class Defender1 : MonoBehaviour
     void Shoot(Enemy target)
     {
         GameObject proj = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        proj.GetComponent<Rigidbody>().velocity = (target.transform.position - transform.position).normalized * 10f;
+        proj.GetComponent<Rigidbody>().linearVelocity = (target.transform.position - transform.position).normalized * 10f;
     }
 }
