@@ -173,7 +173,7 @@ public class ProceduralMap : MonoBehaviour
     }
 
     // helper: get height approximation for non-integer positions (sample nearest vertex)
-    float GetHeightAt(float x, float z)
+    public float GetHeightAt(float x, float z)
     {
         int xi = Mathf.Clamp(Mathf.RoundToInt(x), 0, width);
         int zi = Mathf.Clamp(Mathf.RoundToInt(z), 0, length);
@@ -191,6 +191,28 @@ public class ProceduralMap : MonoBehaviour
         mesh.RecalculateBounds();
         GetComponent<MeshFilter>().mesh = mesh;
     }
+    // Add this after creating paths
+    public Vector3 GetTowerSpawnPoint()
+    {
+        if (paths == null || paths.Count == 0) return centerPoint;
+
+        Vector3 sum = Vector3.zero;
+        int count = 0;
+
+        foreach (var path in paths)
+        {
+            if (path.Count > 0)
+            {
+                sum += path[path.Count - 1]; // last point of the path
+                count++;
+            }
+        }
+
+        Vector3 average = sum / count; // average of all path endpoints
+        average.y = GetHeightAt(average.x, average.z); // snap to terrain
+        return average;
+    }
+
 
 #if UNITY_EDITOR
     void OnDrawGizmos()

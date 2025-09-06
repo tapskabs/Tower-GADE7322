@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 868192840407958482}
   - component: {fileID: 2069123554018942080}
   - component: {fileID: 1068745401461420828}
+  - component: {fileID: -6361264500595097927}
   m_Layer: 0
   m_Name: Tower
   m_TagString: Untagged
@@ -110,3 +111,20 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+--- !u!114 &-6361264500595097927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2936986552467166828}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80d8e92817643434bbd5f02db89e79fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 200
+  attackRate: 1
+  attackRange: 10
+  damage: 15
+  impactVFX: {fileID: 0}
