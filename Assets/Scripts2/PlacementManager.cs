@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using TMPro;
 public class PlacementManager : MonoBehaviour
 {
     public ProceduralMap map;
     public GameObject nodePrefab;         // a small transparent disc to show node
     public GameObject defenderPrefab;     // the defender GameObject to place
     public int defenderCost = 50;
-    public Text resourceText;
+    public TextMeshProUGUI resourceText;
 
     private List<DefenderNode> nodes = new List<DefenderNode>();
 
