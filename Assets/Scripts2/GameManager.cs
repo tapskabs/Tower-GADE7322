@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class GameManager : MonoBehaviour
     public int CurrentResources { get; private set; }
 
     [Header("UI")]
-    public Text resourcesText;
+    public TextMeshProUGUI resourcesText;
     public Slider towerHealthSlider;
     public GameObject gameOverPanel;
     public GameObject pausePanel;
