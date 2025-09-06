@@ -640,7 +640,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 6896661039495085077, guid: 1c309e428ccb0ad4b9b22d51d0f613f9, type: 3}
   m_PrefabInstance: {fileID: 2117910747158306538}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1103832651
+--- !u!114 &1103832656
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -649,15 +649,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 1103832645}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30117f6b85083fd49814a1359232b351, type: 3}
+  m_Script: {fileID: 11500000, guid: 30fef9a15dc1a36468fd3edd2069eef7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: 8
-  fireRate: 1.5
-  damage: 6
   projectilePrefab: {fileID: 0}
-  firePoint: {fileID: 0}
---- !u!1 &1267372293
+  attackRate: 1
+  attackRange: 10
+  attackTimer: 0
+--- !u!1 &1128160462
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -665,39 +664,48 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1267372297}
-  - component: {fileID: 1267372296}
-  - component: {fileID: 1267372295}
-  - component: {fileID: 1267372294}
+  - component: {fileID: 1128160466}
+  - component: {fileID: 1128160465}
+  - component: {fileID: 1128160464}
+  - component: {fileID: 1128160463}
   m_Layer: 0
-  m_Name: Terrain1
+  m_Name: Map
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1267372294
+--- !u!114 &1128160463
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1267372293}
+  m_GameObject: {fileID: 1128160462}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ac423703bff81e4da73e0f0e602f99c, type: 3}
+  m_Script: {fileID: 11500000, guid: 53f2ed71e1e0638448f475cb41f47581, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 50
-  length: 50
-  scale: 5
---- !u!23 &1267372295
+  width: 80
+  length: 80
+  heightScale: 6
+  noiseScale: 0.08
+  numberOfPaths: 3
+  pathWidth: 3
+  pathResolution: 30
+  nodesPerPath: 4
+  nodeDistanceFromPath: 2.5
+  centerPoint: {x: 0, y: 0, z: 0}
+  spawnPoints: []
+  defenderNodes: []
+--- !u!23 &1128160464
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1267372293}
+  m_GameObject: {fileID: 1128160462}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -736,24 +744,24 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1267372296
+--- !u!33 &1128160465
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1267372293}
+  m_GameObject: {fileID: 1128160462}
   m_Mesh: {fileID: 0}
---- !u!4 &1267372297
+--- !u!4 &1128160466
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1267372293}
+  m_GameObject: {fileID: 1128160462}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -13.44, y: -8.48, z: -11.55}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -962,7 +970,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 6896661039495085077, guid: 1c309e428ccb0ad4b9b22d51d0f613f9, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1103832651}
+      addedObject: {fileID: 1103832656}
   m_SourcePrefab: {fileID: 100100000, guid: 1c309e428ccb0ad4b9b22d51d0f613f9, type: 3}
 --- !u!1001 &3090207304585591773
 PrefabInstance:
@@ -1107,9 +1115,9 @@ SceneRoots:
   - {fileID: 772256112}
   - {fileID: 1050480636}
   - {fileID: 1967772826}
-  - {fileID: 1267372297}
   - {fileID: 3090207304585591773}
   - {fileID: 122616558}
   - {fileID: 3532468486958229296}
   - {fileID: 2117910747158306538}
   - {fileID: 1934999920501635763}
+  - {fileID: 1128160466}
