@@ -2,15 +2,13 @@ using UnityEngine;
 
 public class Defender : MonoBehaviour
 {
-    public int maxHealth = 80;
-    public float attackRate = 1f;
-    public float attackRange = 8f;
-    public int damage = 20;
-    public GameObject projectilePrefab;
-    public Transform firePoint;
+    public int maxHealth = 50;
+    public int attackDamage = 5;
+    public float attackRate = 1.2f;
+    public float attackRange = 4f;
 
     private int currentHealth;
-    private float timer = 0f;
+    private float attackTimer = 0f;
 
     void Start()
     {
@@ -19,52 +17,38 @@ public class Defender : MonoBehaviour
 
     void Update()
     {
-        timer += Time.deltaTime;
-        if (timer >= attackRate)
+        attackTimer += Time.deltaTime;
+
+        if (attackTimer >= attackRate)
         {
-            Enemy target = FindClosestEnemy();
+            Enemy target = FindEnemyInRange();
             if (target != null)
             {
-                FireAt(target);
-                timer = 0f;
+                target.ReceiveDamage(attackDamage);
+                attackTimer = 0f;
             }
         }
     }
 
-    Enemy FindClosestEnemy()
+    Enemy FindEnemyInRange()
     {
-        Enemy[] enemies = GameObject.FindObjectsOfType<Enemy>();
-        Enemy closest = null;
-        float minDist = Mathf.Infinity;
-        foreach (var e in enemies)
+        Collider[] hits = Physics.OverlapSphere(transform.position, attackRange);
+        foreach (var h in hits)
         {
-            float d = Vector3.Distance(transform.position, e.transform.position);
-            if (d <= attackRange && d < minDist)
-            {
-                minDist = d;
-                closest = e;
-            }
+            Enemy e = h.GetComponent<Enemy>();
+            if (e != null) return e;
         }
-        return closest;
+        return null;
     }
 
-    void FireAt(Enemy target)
+    public void ReceiveDamage(int dmg)
     {
-        if (projectilePrefab == null)
-        {
-            // fallback: direct damage
-            target.ReceiveDamage(damage);
-            return;
-        }
-
-        var projGO = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
-        var proj = projGO.GetComponent<Projectile>();
-        if (proj != null) proj.Launch(target, damage);
+        currentHealth -= dmg;
+        if (currentHealth <= 0) Die();
     }
 
-    public void ReceiveDamage(int d)
+    void Die()
     {
-        currentHealth -= d;
-        if (currentHealth <= 0) Destroy(gameObject);
+        Destroy(gameObject);
     }
 }

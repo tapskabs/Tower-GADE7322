@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralMap : MonoBehaviour
 {
@@ -17,12 +18,13 @@ public class ProceduralMap : MonoBehaviour
     [Header("Placement nodes")]
     public int nodesPerPath = 4;             // nodes near each path for defenders
     public float nodeDistanceFromPath = 2.5f;
+    public GameObject defenderNodePrefab;    // prefab for node placement spots
 
     // generated data (read-only at runtime)
     [HideInInspector] public Vector3 centerPoint;
     [HideInInspector] public List<List<Vector3>> paths = new List<List<Vector3>>();
     [HideInInspector] public List<Vector3> spawnPoints = new List<Vector3>();
-    [HideInInspector] public List<Vector3> defenderNodes = new List<Vector3>();
+    [HideInInspector] public List<DefenderNode> defenderNodes = new List<DefenderNode>();
 
     private Mesh mesh;
     private Vector3[] vertices;
@@ -110,7 +112,7 @@ public class ProceduralMap : MonoBehaviour
             paths.Add(singlePath);
             spawnPoints.Add(anchor);
 
-            // carve only this path (note: uses singlePath variable name)
+            // carve only this path
             CarvePathIntoHeightmap(singlePath);
 
             // generate defender nodes near this single path
@@ -123,7 +125,6 @@ public class ProceduralMap : MonoBehaviour
     {
         float half = pathWidth * 0.5f;
 
-        // For every vertex in mesh, if it's within pathWidth of any point of this path, lower it toward flat y
         for (int vi = 0; vi < vertices.Length; vi++)
         {
             Vector3 v = vertices[vi];
@@ -131,7 +132,6 @@ public class ProceduralMap : MonoBehaviour
             float minDist = float.MaxValue;
             Vector3 closest = v;
 
-            // iterate only the passed-in path (variable name singlePath avoids conflicts)
             foreach (var p in singlePath)
             {
                 float d = Vector2.Distance(new Vector2(p.x, p.z), v2);
@@ -157,22 +157,30 @@ public class ProceduralMap : MonoBehaviour
     {
         if (pathList == null || pathList.Count == 0) return;
         int step = Mathf.Max(1, pathList.Count / (count + 1));
+
         for (int i = step; i < pathList.Count - step; i += step)
         {
             Vector3 p = pathList[i];
-            Vector3 dir = Vector3.zero;
-            if (i < pathList.Count - 1) dir = (pathList[i + 1] - pathList[i - 1]).normalized;
-            else dir = (centerPoint - pathList[i]).normalized;
+            Vector3 dir = (i < pathList.Count - 1)
+                ? (pathList[i + 1] - pathList[i - 1]).normalized
+                : (centerPoint - pathList[i]).normalized;
+
             Vector3 perp = Vector3.Cross(dir, Vector3.up).normalized;
             float side = (Random.value > 0.5f) ? 1f : -1f;
-            Vector3 node = p + perp * side * distanceFromPath;
-            float y = GetHeightAt(node.x, node.z);
-            node.y = y + 0.1f; // slightly above ground
-            defenderNodes.Add(node);
+            Vector3 nodePos = p + perp * side * distanceFromPath;
+            float y = GetHeightAt(nodePos.x, nodePos.z);
+            nodePos.y = y + 0.1f;
+
+            if (defenderNodePrefab != null)
+            {
+                GameObject go = Instantiate(defenderNodePrefab, nodePos, Quaternion.identity, transform);
+                DefenderNode dn = go.GetComponent<DefenderNode>();
+                if (dn != null) defenderNodes.Add(dn);
+            }
         }
     }
 
-    // helper: get height approximation for non-integer positions (sample nearest vertex)
+    // helper: get height approximation
     public float GetHeightAt(float x, float z)
     {
         int xi = Mathf.Clamp(Mathf.RoundToInt(x), 0, width);
@@ -191,28 +199,27 @@ public class ProceduralMap : MonoBehaviour
         mesh.RecalculateBounds();
         GetComponent<MeshFilter>().mesh = mesh;
     }
-    // Add this after creating paths
+
+    // Tower spawn point = average where all paths converge
     public Vector3 GetTowerSpawnPoint()
     {
         if (paths == null || paths.Count == 0) return centerPoint;
 
         Vector3 sum = Vector3.zero;
         int count = 0;
-
         foreach (var path in paths)
         {
             if (path.Count > 0)
             {
-                sum += path[path.Count - 1]; // last point of the path
+                sum += path[path.Count - 1];
                 count++;
             }
         }
 
-        Vector3 average = sum / count; // average of all path endpoints
-        average.y = GetHeightAt(average.x, average.z); // snap to terrain
+        Vector3 average = sum / count;
+        average.y = GetHeightAt(average.x, average.z);
         return average;
     }
-
 
 #if UNITY_EDITOR
     void OnDrawGizmos()
@@ -231,7 +238,7 @@ public class ProceduralMap : MonoBehaviour
         Gizmos.color = Color.green;
         if (defenderNodes != null)
             foreach (var n in defenderNodes)
-                Gizmos.DrawCube(n, Vector3.one * 0.5f);
+                if (n != null) Gizmos.DrawCube(n.transform.position, Vector3.one * 0.5f);
     }
 #endif
 }

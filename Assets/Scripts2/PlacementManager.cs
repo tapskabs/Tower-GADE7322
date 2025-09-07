@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
+
 public class PlacementManager : MonoBehaviour
 {
     public ProceduralMap map;
-    public GameObject nodePrefab;         // a small transparent disc to show node
+    // nodePrefab is no longer required because ProceduralMap instantiates nodes.
+    // public GameObject nodePrefab;         
     public GameObject defenderPrefab;     // the defender GameObject to place
     public int defenderCost = 50;
     public TextMeshProUGUI resourceText;
@@ -18,14 +20,26 @@ public class PlacementManager : MonoBehaviour
         UpdateResourceText();
     }
 
+    // Collect the DefenderNode instances that the ProceduralMap already created
     void CreateNodesFromMap()
     {
-        foreach (var pos in map.defenderNodes)
+        nodes.Clear();
+        if (map == null)
         {
-            GameObject g = Instantiate(nodePrefab, pos, Quaternion.identity);
-            DefenderNode node = g.AddComponent<DefenderNode>();
-            nodes.Add(node);
-            // you can also add a collider on nodePrefab and a NodeUI visual
+            Debug.LogWarning("PlacementManager: ProceduralMap reference not set.");
+            return;
+        }
+
+        if (map.defenderNodes != null && map.defenderNodes.Count > 0)
+        {
+            foreach (var dn in map.defenderNodes)
+            {
+                if (dn != null) nodes.Add(dn);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("PlacementManager: No defender nodes found on the map.");
         }
     }
 
@@ -34,13 +48,14 @@ public class PlacementManager : MonoBehaviour
         // click detection for placement
         if (Input.GetMouseButtonDown(0) && !IsPointerOverUI())
         {
+            if (Camera.main == null) return;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit, 100f))
             {
                 DefenderNode node = hit.collider.GetComponent<DefenderNode>();
                 if (node != null && !node.isOccupied)
                 {
-                    if (GameManager.Instance.CurrentResources >= defenderCost)
+                    if (GameManager.Instance != null && GameManager.Instance.CurrentResources >= defenderCost)
                     {
                         node.PlaceDefender(defenderPrefab);
                         GameManager.Instance.SpendResources(defenderCost);
@@ -57,11 +72,12 @@ public class PlacementManager : MonoBehaviour
 
     bool IsPointerOverUI()
     {
-        return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+        return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
     }
 
     void UpdateResourceText()
     {
-        if (resourceText) resourceText.text = GameManager.Instance.CurrentResources.ToString();
+        if (resourceText)
+            resourceText.text = GameManager.Instance != null ? GameManager.Instance.CurrentResources.ToString() : "0";
     }
 }
