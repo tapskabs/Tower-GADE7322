@@ -62,6 +62,14 @@ public class GameManager : MonoBehaviour
         if (gameOverPanel) gameOverPanel.SetActive(true);
     }
 
+    public void ResumeGame()
+    {
+        
+        paused = false;
+        Time.timeScale = 1f;
+        if (pausePanel)
+            pausePanel.SetActive(false);
+    }
     public void TogglePause()
     {
         paused = !paused;
@@ -80,4 +88,6 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         Application.Quit();
     }
+
+   
 }
