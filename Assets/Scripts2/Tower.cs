@@ -10,7 +10,7 @@ public class Tower : MonoBehaviour
     public GameObject impactVFX;
 
     [Header("UI")]
-    public Slider healthSlider; // drag the TowerHealthSlider from Canvas here
+    public Slider healthSlider; 
 
     private int currentHealth;
     private float attackTimer;
@@ -21,7 +21,7 @@ public class Tower : MonoBehaviour
         GameManager.Instance?.UpdateTowerHealth(currentHealth, maxHealth);
 
         if (healthSlider != null)
-            healthSlider.value = 1f; // start full
+            healthSlider.value = 1f; 
     }
 
     void Update()
@@ -32,7 +32,7 @@ public class Tower : MonoBehaviour
             Enemy target = FindClosestEnemyInRange();
             if (target != null)
             {
-                // simulate immediate damage (or spawn projectile)
+               
                 target.ReceiveDamage(damage);
                 if (impactVFX) Instantiate(impactVFX, target.transform.position, Quaternion.identity);
                 attackTimer = 0f;

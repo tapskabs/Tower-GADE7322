@@ -25,7 +25,7 @@ public class Enemy : MonoBehaviour
     public GameObject healthBarPrefab;
     private EnemyHealthBar healthBar;
 
-    // Initialize enemy with path and tower reference
+   
     public void InitRoute(Vector3[] waypoints, Tower tower)
     {
         route = waypoints;
@@ -36,15 +36,15 @@ public class Enemy : MonoBehaviour
         // cache terrain once
         terrain = FindObjectOfType<ProceduralMap>();
 
-        // ✅ Spawn health bar above enemy
+       
         if (healthBarPrefab != null && healthBar == null)
         {
             GameObject hb = Instantiate(healthBarPrefab, transform.position + Vector3.up * 2f, Quaternion.identity);
-            hb.transform.SetParent(GameObject.Find("Canvas").transform, false); // assumes a World Space Canvas
+            hb.transform.SetParent(GameObject.Find("Canvas").transform, false); 
             healthBar = hb.GetComponent<EnemyHealthBar>();
             if (healthBar != null)
             {
-                // initialize full health bar
+               
                 healthBar.SetHealth(currentHealth, maxHealth);
             }
         }
@@ -54,7 +54,7 @@ public class Enemy : MonoBehaviour
     {
         if (route == null || route.Length == 0) return;
 
-        // ✅ Always check for defenders
+        
         DetectNearbyDefender();
 
         if (currentDefenderTarget != null)
@@ -70,7 +70,7 @@ public class Enemy : MonoBehaviour
             AttackTower();
         }
 
-        // ✅ keep health bar above enemy
+       
         if (healthBar != null)
         {
             Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
@@ -97,11 +97,11 @@ public class Enemy : MonoBehaviour
             Vector3 move = dir.normalized * speed * Time.deltaTime;
             Vector3 newPos = transform.position + move;
 
-            // snap Y to terrain
+            
             if (terrain != null)
             {
                 float groundY = terrain.GetHeightAt(newPos.x, newPos.z);
-                newPos.y = groundY + 0.1f; // small offset so feet don’t clip
+                newPos.y = groundY + 0.1f; 
             }
 
             transform.position = newPos;
@@ -109,7 +109,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // ✅ Defender detection
+    
     void DetectNearbyDefender()
     {
         currentDefenderTarget = null;
@@ -125,7 +125,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // ✅ Attack defender
+   
     void AttackDefender()
     {
         attackTimer += Time.deltaTime;
@@ -136,7 +136,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // ✅ Attack tower if in range
+    
     void AttackTower()
     {
         attackTimer += Time.deltaTime;
@@ -153,7 +153,7 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            // Move toward tower if not in range
+           
             Vector3 moveDir = (towerTarget.transform.position - transform.position).normalized;
             Vector3 newPos = transform.position + moveDir * speed * Time.deltaTime;
 

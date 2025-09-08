@@ -15,8 +15,8 @@ public class Defender : MonoBehaviour
     private float attackTimer = 0f;
 
     [Header("UI")]
-    public GameObject healthBarPrefab;   // assign in Inspector
-    private EnemyHealthBar healthBar;    // reuse same component type for simplicity
+    public GameObject healthBarPrefab;   
+    private EnemyHealthBar healthBar;    
 
     void Start()
     {
@@ -26,8 +26,8 @@ public class Defender : MonoBehaviour
         if (healthBarPrefab != null)
         {
             GameObject hb = Instantiate(healthBarPrefab, transform.position + Vector3.up * 2f, Quaternion.identity);
-            hb.transform.SetParent(GameObject.Find("Canvas").transform, false); // assumes world-space canvas
-            healthBar = hb.GetComponent<EnemyHealthBar>(); // using same script as enemies
+            hb.transform.SetParent(GameObject.Find("Canvas").transform, false); 
+            healthBar = hb.GetComponent<EnemyHealthBar>(); 
             if (healthBar != null)
             {
                 healthBar.SetHealth(currentHealth, maxHealth);
@@ -49,7 +49,7 @@ public class Defender : MonoBehaviour
             }
         }
 
-        //  keep health bar above defender
+        
         if (healthBar != null)
         {
             Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
@@ -78,7 +78,7 @@ public class Defender : MonoBehaviour
     {
         currentHealth -= dmg;
 
-        //  update health bar
+       
         if (healthBar != null)
         {
             healthBar.SetHealth(currentHealth, maxHealth);

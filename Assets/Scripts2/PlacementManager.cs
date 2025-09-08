@@ -25,9 +25,7 @@ public class PlacementManager : MonoBehaviour
         UpdateResourceText();
     }
 
-    /// <summary>
-    /// Collects both DefenderNodes and MiningNodes that the ProceduralMap generated.
-    /// </summary>
+
     void CacheNodesFromMap()
     {
         defenderNodes.Clear();
@@ -75,7 +73,7 @@ public class PlacementManager : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (!Physics.Raycast(ray, out RaycastHit hit, 100f)) return;
 
-        // Defender node check
+     
         DefenderNode defenderNode = hit.collider.GetComponent<DefenderNode>();
         if (defenderNode != null && !defenderNode.isOccupied)
         {
@@ -83,7 +81,7 @@ public class PlacementManager : MonoBehaviour
             return;
         }
 
-        // Mining node check
+      
         MiningNode miningNode = hit.collider.GetComponent<MiningNode>();
         if (miningNode != null && !miningNode.isOccupied)
         {

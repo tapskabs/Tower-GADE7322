@@ -29,7 +29,7 @@ public class Spawner : MonoBehaviour
     void Spawn()
     {
         if (map == null || map.spawnPoints.Count == 0) return;
-        // pick path (round robin)
+        
         int p = nextPathIndex % map.paths.Count;
         nextPathIndex++;
 
@@ -37,7 +37,7 @@ public class Spawner : MonoBehaviour
         GameObject go = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
         Enemy enemy = go.GetComponent<Enemy>();
 
-        // convert path List<Vector3> to array and pass
+       
         List<Vector3> path = map.paths[p];
         enemy.InitRoute(path.ToArray(), tower);
     }
