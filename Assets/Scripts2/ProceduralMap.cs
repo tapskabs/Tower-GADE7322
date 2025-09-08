@@ -109,14 +109,50 @@ public class ProceduralMap : MonoBehaviour
                 singlePath.Add(point);
             }
 
-            paths.Add(singlePath);
+            List<Vector3> smoothedPath = SmoothPath(singlePath, 8); // try 8 samples per segment
+            paths.Add(smoothedPath);
             spawnPoints.Add(anchor);
+
+            // carve only this path into terrain
+            CarvePathIntoHeightmap(smoothedPath);
+
+            // generate defender nodes near this smoothed path
+            GenerateNodesNearPath(smoothedPath, nodesPerPath, nodeDistanceFromPath);
 
             // carve only this path
             CarvePathIntoHeightmap(singlePath);
 
             // generate defender nodes near this single path
             GenerateNodesNearPath(singlePath, nodesPerPath, nodeDistanceFromPath);
+        }
+
+
+        List<Vector3> SmoothPath(List<Vector3> rawPoints, int smoothFactor)
+        {
+            List<Vector3> smoothed = new List<Vector3>();
+
+            for (int i = 0; i < rawPoints.Count - 1; i++)
+            {
+                // Clamp indices for spline (avoid out of range)
+                Vector3 p0 = rawPoints[Mathf.Max(i - 1, 0)];
+                Vector3 p1 = rawPoints[i];
+                Vector3 p2 = rawPoints[Mathf.Min(i + 1, rawPoints.Count - 1)];
+                Vector3 p3 = rawPoints[Mathf.Min(i + 2, rawPoints.Count - 1)];
+
+                for (int j = 0; j < smoothFactor; j++)
+                {
+                    float t = j / (float)smoothFactor;
+                    Vector3 pos = CatmullRom(p0, p1, p2, p3, t);
+
+                    // Keep it aligned with terrain height
+                    pos.y = GetHeightAt(pos.x, pos.z);
+                    smoothed.Add(pos);
+                }
+            }
+
+            // Add final point
+            smoothed.Add(rawPoints[rawPoints.Count - 1]);
+            return smoothed;
         }
     }
 
@@ -191,6 +227,16 @@ public class ProceduralMap : MonoBehaviour
         return 0f;
     }
 
+    Vector3 CatmullRom(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+    {
+        // Formula for Catmull-Rom spline
+        return 0.5f * (
+            (2f * p1) +
+            (-p0 + p2) * t +
+            (2f * p0 - 5f * p1 + 4f * p2 - p3) * t * t +
+            (-p0 + 3f * p1 - 3f * p2 + p3) * t * t * t
+        );
+    }
     void ApplyMesh()
     {
         mesh.vertices = vertices;

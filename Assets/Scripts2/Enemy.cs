@@ -18,6 +18,9 @@ public class Enemy : MonoBehaviour
     private Tower towerTarget;
     private Defender currentDefenderTarget;
 
+    // Reference to the procedural terrain
+    private ProceduralMap terrain;
+
     // Initialize enemy with path and tower reference
     public void InitRoute(Vector3[] waypoints, Tower tower)
     {
@@ -25,6 +28,9 @@ public class Enemy : MonoBehaviour
         towerTarget = tower;
         currentIndex = 0;
         currentHealth = maxHealth;
+
+        // cache terrain once
+        terrain = FindObjectOfType<ProceduralMap>();
     }
 
     void Update()
@@ -44,8 +50,7 @@ public class Enemy : MonoBehaviour
     void MoveAlongPath()
     {
         Vector3 targetPos = route[currentIndex];
-        Vector3 flatTarget = new Vector3(targetPos.x, transform.position.y, targetPos.z);
-        Vector3 dir = flatTarget - transform.position;
+        Vector3 dir = new Vector3(targetPos.x, transform.position.y, targetPos.z) - transform.position;
 
         if (dir.magnitude < 0.1f)
         {
@@ -58,7 +63,17 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            transform.position += dir.normalized * speed * Time.deltaTime;
+            Vector3 move = dir.normalized * speed * Time.deltaTime;
+            Vector3 newPos = transform.position + move;
+
+            // snap Y to terrain
+            if (terrain != null)
+            {
+                float groundY = terrain.GetHeightAt(newPos.x, newPos.z);
+                newPos.y = groundY + 0.1f; // small offset so feet don’t clip
+            }
+
+            transform.position = newPos;
             transform.forward = Vector3.Slerp(transform.forward, dir.normalized, 0.2f);
         }
     }
@@ -105,7 +120,16 @@ public class Enemy : MonoBehaviour
             {
                 // Move toward tower if not in range
                 Vector3 moveDir = (towerTarget.transform.position - transform.position).normalized;
-                transform.position += moveDir * speed * Time.deltaTime;
+                Vector3 newPos = transform.position + moveDir * speed * Time.deltaTime;
+
+                // snap Y to terrain
+                if (terrain != null)
+                {
+                    float groundY = terrain.GetHeightAt(newPos.x, newPos.z);
+                    newPos.y = groundY + 0.1f;
+                }
+
+                transform.position = newPos;
                 transform.forward = Vector3.Slerp(transform.forward, moveDir, 0.2f);
             }
         }
