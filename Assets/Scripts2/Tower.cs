@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Tower : MonoBehaviour
 {
@@ -8,6 +9,9 @@ public class Tower : MonoBehaviour
     public int damage = 15;
     public GameObject impactVFX;
 
+    [Header("UI")]
+    public Slider healthSlider; // drag the TowerHealthSlider from Canvas here
+
     private int currentHealth;
     private float attackTimer;
 
@@ -15,6 +19,9 @@ public class Tower : MonoBehaviour
     {
         currentHealth = maxHealth;
         GameManager.Instance?.UpdateTowerHealth(currentHealth, maxHealth);
+
+        if (healthSlider != null)
+            healthSlider.value = 1f; // start full
     }
 
     void Update()
@@ -53,10 +60,15 @@ public class Tower : MonoBehaviour
     public void TakeDamage(int dmg)
     {
         currentHealth -= dmg;
+        if (currentHealth < 0) currentHealth = 0;
+
         GameManager.Instance?.UpdateTowerHealth(currentHealth, maxHealth);
+
+        if (healthSlider != null)
+            healthSlider.value = (float)currentHealth / maxHealth;
+
         if (currentHealth <= 0)
         {
-            currentHealth = 0;
             GameManager.Instance?.OnGameOver();
         }
     }

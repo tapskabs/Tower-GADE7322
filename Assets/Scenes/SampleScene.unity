@@ -482,6 +482,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -6361264500595097927, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
+      propertyPath: damage
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: -6361264500595097927, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
+      propertyPath: healthSlider
+      value: 
+      objectReference: {fileID: 884869500}
     - target: {fileID: 2936986552467166828, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
       propertyPath: m_Name
       value: Tower
@@ -2162,7 +2170,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startingResources: 200
   resourcesText: {fileID: 1443700801}
-  towerHealthSlider: {fileID: 884869500}
+  towerHealthSlider: {fileID: 0}
   gameOverPanel: {fileID: 9025797}
   pausePanel: {fileID: 0}
 --- !u!114 &1967772828
