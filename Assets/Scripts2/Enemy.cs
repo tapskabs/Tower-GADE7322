@@ -21,6 +21,10 @@ public class Enemy : MonoBehaviour
     // Reference to the procedural terrain
     private ProceduralMap terrain;
 
+    [Header("UI")]
+    public GameObject healthBarPrefab;
+    private EnemyHealthBar healthBar;
+
     // Initialize enemy with path and tower reference
     public void InitRoute(Vector3[] waypoints, Tower tower)
     {
@@ -31,8 +35,20 @@ public class Enemy : MonoBehaviour
 
         // cache terrain once
         terrain = FindObjectOfType<ProceduralMap>();
-    }
 
+        // ✅ Spawn health bar above enemy
+        if (healthBarPrefab != null && healthBar == null)
+        {
+            GameObject hb = Instantiate(healthBarPrefab, transform.position + Vector3.up * 2f, Quaternion.identity);
+            hb.transform.SetParent(GameObject.Find("Canvas").transform, false); // assumes a World Space Canvas
+            healthBar = hb.GetComponent<EnemyHealthBar>();
+            if (healthBar != null)
+            {
+                // initialize full health bar
+                healthBar.SetHealth(currentHealth, maxHealth);
+            }
+        }
+    }
     void Update()
     {
         if (route == null || route.Length == 0) return;
@@ -44,6 +60,13 @@ public class Enemy : MonoBehaviour
         else
         {
             AttackTargets();
+        }
+
+        // ✅ keep health bar above enemy
+        if (healthBar != null)
+        {
+            Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
+            healthBar.transform.position = screenPos;
         }
     }
 
@@ -138,12 +161,24 @@ public class Enemy : MonoBehaviour
     public void ReceiveDamage(int dmg)
     {
         currentHealth -= dmg;
+
+        // ✅ Update bar properly
+        if (healthBar != null)
+        {
+            healthBar.SetHealth(currentHealth, maxHealth);
+        }
+
         if (currentHealth <= 0) Die();
     }
 
     void Die()
     {
         GameManager.Instance?.AddResources(10);
+
+        // ✅ remove health bar when enemy dies
+        if (healthBar != null)
+            Destroy(healthBar.gameObject);
+
         Destroy(gameObject);
     }
 }
