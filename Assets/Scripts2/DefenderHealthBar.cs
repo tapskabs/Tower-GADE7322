@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class DefenderHealthBar : MonoBehaviour
 {
-    public Image fill;   // drag the inner bar image here
+    public Image fill;   
 
     public void SetHealth(int current, int max)
     {

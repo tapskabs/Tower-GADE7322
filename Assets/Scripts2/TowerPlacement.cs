@@ -15,7 +15,7 @@ public class TowerPlacement : MonoBehaviour
         if (map == null || towerPrefab == null) return;
 
         Vector3 towerPos = map.centerPoint;
-        // Adjust Y to match terrain height
+       
         towerPos.y = map.GetHeightAt(towerPos.x, towerPos.z);
 
         Instantiate(towerPrefab, towerPos, Quaternion.identity);

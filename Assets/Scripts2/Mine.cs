@@ -3,8 +3,8 @@ using UnityEngine;
 public class Mine : MonoBehaviour
 {
     [Header("Economy")]
-    public int resourcePerCycle = 20;      // how much money each cycle
-    public float cycleTime = 10f;          // interval in seconds
+    public int resourcePerCycle = 20;      
+    public float cycleTime = 10f;         
 
     private float timer = 0f;
 
@@ -13,13 +13,13 @@ public class Mine : MonoBehaviour
     private int currentHealth;
 
     public GameObject healthBarPrefab;
-    private DefenderHealthBar healthBar; // reuse defender-style health bar
+    private DefenderHealthBar healthBar; 
 
     void Start()
     {
         currentHealth = maxHealth;
 
-        // Spawn health bar above mine
+       
         if (healthBarPrefab != null)
         {
             GameObject hb = Instantiate(healthBarPrefab, transform.position + Vector3.up * 2f, Quaternion.identity);
@@ -32,7 +32,7 @@ public class Mine : MonoBehaviour
 
     void Update()
     {
-        // Generate resources every cycle
+       
         timer += Time.deltaTime;
         if (timer >= cycleTime)
         {
@@ -40,7 +40,7 @@ public class Mine : MonoBehaviour
             timer = 0f;
         }
 
-        // Keep healthbar above mine
+       
         if (healthBar != null)
         {
             Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
