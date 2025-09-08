@@ -229,7 +229,7 @@ MonoBehaviour:
   maxHealth: 40
   damage: 10
   attackRate: 1
-  reachRadius: 1.2
+  reachRadius: 3.5
   healthBarPrefab: {fileID: 5016301107273850604}
 --- !u!114 &5768866528932009596
 MonoBehaviour:

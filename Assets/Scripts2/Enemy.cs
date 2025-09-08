@@ -49,17 +49,25 @@ public class Enemy : MonoBehaviour
             }
         }
     }
+
     void Update()
     {
         if (route == null || route.Length == 0) return;
 
-        if (!reachedTower)
+        // ✅ Always check for defenders
+        DetectNearbyDefender();
+
+        if (currentDefenderTarget != null)
+        {
+            AttackDefender();
+        }
+        else if (!reachedTower)
         {
             MoveAlongPath();
         }
         else
         {
-            AttackTargets();
+            AttackTower();
         }
 
         // ✅ keep health bar above enemy
@@ -101,12 +109,10 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    void AttackTargets()
+    // ✅ Defender detection
+    void DetectNearbyDefender()
     {
-        // Reset current defender target
         currentDefenderTarget = null;
-
-        // Check for nearby defenders
         Collider[] hits = Physics.OverlapSphere(transform.position, reachRadius);
         foreach (var hit in hits)
         {
@@ -117,44 +123,48 @@ public class Enemy : MonoBehaviour
                 break;
             }
         }
+    }
 
+    // ✅ Attack defender
+    void AttackDefender()
+    {
         attackTimer += Time.deltaTime;
+        if (attackTimer >= attackRate && currentDefenderTarget != null)
+        {
+            currentDefenderTarget.ReceiveDamage(damage);
+            attackTimer = 0f;
+        }
+    }
 
-        if (currentDefenderTarget != null)
+    // ✅ Attack tower if in range
+    void AttackTower()
+    {
+        attackTimer += Time.deltaTime;
+        if (towerTarget == null) return;
+
+        float dist = Vector3.Distance(transform.position, towerTarget.transform.position);
+        if (dist <= reachRadius)
         {
             if (attackTimer >= attackRate)
             {
-                currentDefenderTarget.ReceiveDamage(damage);
+                towerTarget.TakeDamage(damage);
                 attackTimer = 0f;
             }
         }
-        else if (towerTarget != null)
+        else
         {
-            float dist = Vector3.Distance(transform.position, towerTarget.transform.position);
-            if (dist <= reachRadius)
-            {
-                if (attackTimer >= attackRate)
-                {
-                    towerTarget.TakeDamage(damage);
-                    attackTimer = 0f;
-                }
-            }
-            else
-            {
-                // Move toward tower if not in range
-                Vector3 moveDir = (towerTarget.transform.position - transform.position).normalized;
-                Vector3 newPos = transform.position + moveDir * speed * Time.deltaTime;
+            // Move toward tower if not in range
+            Vector3 moveDir = (towerTarget.transform.position - transform.position).normalized;
+            Vector3 newPos = transform.position + moveDir * speed * Time.deltaTime;
 
-                // snap Y to terrain
-                if (terrain != null)
-                {
-                    float groundY = terrain.GetHeightAt(newPos.x, newPos.z);
-                    newPos.y = groundY + 0.1f;
-                }
-
-                transform.position = newPos;
-                transform.forward = Vector3.Slerp(transform.forward, moveDir, 0.2f);
+            if (terrain != null)
+            {
+                float groundY = terrain.GetHeightAt(newPos.x, newPos.z);
+                newPos.y = groundY + 0.1f;
             }
+
+            transform.position = newPos;
+            transform.forward = Vector3.Slerp(transform.forward, moveDir, 0.2f);
         }
     }
 
