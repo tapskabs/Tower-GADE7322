@@ -4,27 +4,29 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralMap : MonoBehaviour
 {
-    [Header("Map size")]
+    [Header("Map Size")]
     public int width = 80;
     public int length = 80;
     public float heightScale = 6f;
     public float noiseScale = 0.08f;
 
     [Header("Paths")]
-    public int numberOfPaths = 3;            // must be >=3
-    public float pathWidth = 3f;             // how wide carved paths are
-    public int pathResolution = 30;          // number of waypoints per path
+    public int numberOfPaths = 3;       // must be >= 3
+    public float pathWidth = 3f;        // how wide carved paths are
+    public int pathResolution = 30;     // number of waypoints per path
 
-    [Header("Placement nodes")]
-    public int nodesPerPath = 4;             // nodes near each path for defenders
+    [Header("Placement Nodes")]
+    public int nodesPerPath = 4;             // nodes near each path
     public float nodeDistanceFromPath = 2.5f;
-    public GameObject defenderNodePrefab;    // prefab for node placement spots
+    public GameObject defenderNodePrefab;    // prefab for defenders
+    public GameObject miningNodePrefab;      // prefab for mines
 
-    // generated data (read-only at runtime)
+    // generated data
     [HideInInspector] public Vector3 centerPoint;
     [HideInInspector] public List<List<Vector3>> paths = new List<List<Vector3>>();
     [HideInInspector] public List<Vector3> spawnPoints = new List<Vector3>();
     [HideInInspector] public List<DefenderNode> defenderNodes = new List<DefenderNode>();
+    [HideInInspector] public List<MiningNode> miningNodes = new List<MiningNode>();
 
     private Mesh mesh;
     private Vector3[] vertices;
@@ -43,7 +45,7 @@ public class ProceduralMap : MonoBehaviour
         ApplyMesh();
     }
 
-    // Build base Perlin mesh
+    // Build base terrain using Perlin noise
     void BuildBaseMesh()
     {
         mesh = new Mesh();
@@ -54,14 +56,14 @@ public class ProceduralMap : MonoBehaviour
         {
             for (int x = 0; x <= width; x++)
             {
-                float y = Mathf.PerlinNoise((x + Time.time) * noiseScale, (z + Time.time * 2f) * noiseScale) * heightScale;
+                float y = Mathf.PerlinNoise((x + Time.time) * noiseScale,
+                                            (z + Time.time * 2f) * noiseScale) * heightScale;
                 vertices[i] = new Vector3(x, y, z);
                 i++;
             }
         }
 
-        int vert = 0;
-        int tri = 0;
+        int vert = 0, tri = 0;
         for (int z = 0; z < length; z++)
         {
             for (int x = 0; x < width; x++)
@@ -80,14 +82,16 @@ public class ProceduralMap : MonoBehaviour
         }
     }
 
-    // Create multiple paths leading to center and carve the mesh
+    // Create multiple paths leading to the center and carve them
     void CreatePaths()
     {
         paths.Clear();
         spawnPoints.Clear();
         defenderNodes.Clear();
+        miningNodes.Clear();
 
         float edge = Mathf.Max(width, length);
+
         for (int p = 0; p < numberOfPaths; p++)
         {
             float angle = ((float)p / numberOfPaths) * Mathf.PI * 2f + Random.Range(-0.3f, 0.3f);
@@ -96,7 +100,8 @@ public class ProceduralMap : MonoBehaviour
             anchor.z = Mathf.Clamp(anchor.z, 1f, length - 1f);
             anchor.y = GetHeightAt(anchor.x, anchor.z);
 
-            List<Vector3> singlePath = new List<Vector3>();
+            // Build path
+            List<Vector3> rawPath = new List<Vector3>();
             for (int i = 0; i <= pathResolution; i++)
             {
                 float t = (float)i / pathResolution;
@@ -106,57 +111,47 @@ public class ProceduralMap : MonoBehaviour
                 float jitter = Mathf.PerlinNoise(p * 10 + i * 0.1f, Time.time * 0.1f) - 0.5f;
                 point += perp * jitter * 1.2f;
                 point.y = GetHeightAt(point.x, point.z);
-                singlePath.Add(point);
+                rawPath.Add(point);
             }
 
-            List<Vector3> smoothedPath = SmoothPath(singlePath, 8); // try 8 samples per segment
+            List<Vector3> smoothedPath = SmoothPath(rawPath, 8);
             paths.Add(smoothedPath);
             spawnPoints.Add(anchor);
 
-            // carve only this path into terrain
+            // Carve path into mesh
             CarvePathIntoHeightmap(smoothedPath);
 
-            // generate defender nodes near this smoothed path
+            // Generate both defender and mining nodes along path
             GenerateNodesNearPath(smoothedPath, nodesPerPath, nodeDistanceFromPath);
-
-            // carve only this path
-            CarvePathIntoHeightmap(singlePath);
-
-            // generate defender nodes near this single path
-            GenerateNodesNearPath(singlePath, nodesPerPath, nodeDistanceFromPath);
-        }
-
-
-        List<Vector3> SmoothPath(List<Vector3> rawPoints, int smoothFactor)
-        {
-            List<Vector3> smoothed = new List<Vector3>();
-
-            for (int i = 0; i < rawPoints.Count - 1; i++)
-            {
-                // Clamp indices for spline (avoid out of range)
-                Vector3 p0 = rawPoints[Mathf.Max(i - 1, 0)];
-                Vector3 p1 = rawPoints[i];
-                Vector3 p2 = rawPoints[Mathf.Min(i + 1, rawPoints.Count - 1)];
-                Vector3 p3 = rawPoints[Mathf.Min(i + 2, rawPoints.Count - 1)];
-
-                for (int j = 0; j < smoothFactor; j++)
-                {
-                    float t = j / (float)smoothFactor;
-                    Vector3 pos = CatmullRom(p0, p1, p2, p3, t);
-
-                    // Keep it aligned with terrain height
-                    pos.y = GetHeightAt(pos.x, pos.z);
-                    smoothed.Add(pos);
-                }
-            }
-
-            // Add final point
-            smoothed.Add(rawPoints[rawPoints.Count - 1]);
-            return smoothed;
         }
     }
 
-    // flatten heights along a single path corridor
+    // Smooth path points using Catmull-Rom
+    List<Vector3> SmoothPath(List<Vector3> rawPoints, int smoothFactor)
+    {
+        List<Vector3> smoothed = new List<Vector3>();
+
+        for (int i = 0; i < rawPoints.Count - 1; i++)
+        {
+            Vector3 p0 = rawPoints[Mathf.Max(i - 1, 0)];
+            Vector3 p1 = rawPoints[i];
+            Vector3 p2 = rawPoints[Mathf.Min(i + 1, rawPoints.Count - 1)];
+            Vector3 p3 = rawPoints[Mathf.Min(i + 2, rawPoints.Count - 1)];
+
+            for (int j = 0; j < smoothFactor; j++)
+            {
+                float t = j / (float)smoothFactor;
+                Vector3 pos = CatmullRom(p0, p1, p2, p3, t);
+                pos.y = GetHeightAt(pos.x, pos.z);
+                smoothed.Add(pos);
+            }
+        }
+
+        smoothed.Add(rawPoints[rawPoints.Count - 1]);
+        return smoothed;
+    }
+
+    // Carve terrain along path
     void CarvePathIntoHeightmap(List<Vector3> singlePath)
     {
         float half = pathWidth * 0.5f;
@@ -180,15 +175,14 @@ public class ProceduralMap : MonoBehaviour
 
             if (minDist <= half)
             {
-                float targetY = Mathf.Lerp(closest.y - 0.2f, closest.y + 0.2f, 0.5f);
+                float targetY = closest.y;
                 float t = 1f - (minDist / half);
-                float newY = Mathf.Lerp(v.y, targetY, t);
-                vertices[vi].y = newY;
+                vertices[vi].y = Mathf.Lerp(v.y, targetY, t);
             }
         }
     }
 
-    // generate defender nodes next to path (not on path)
+    // Generate both defender and mining nodes along path
     void GenerateNodesNearPath(List<Vector3> pathList, int count, float distanceFromPath)
     {
         if (pathList == null || pathList.Count == 0) return;
@@ -204,19 +198,25 @@ public class ProceduralMap : MonoBehaviour
             Vector3 perp = Vector3.Cross(dir, Vector3.up).normalized;
             float side = (Random.value > 0.5f) ? 1f : -1f;
             Vector3 nodePos = p + perp * side * distanceFromPath;
-            float y = GetHeightAt(nodePos.x, nodePos.z);
-            nodePos.y = y + 0.1f;
+            nodePos.y = GetHeightAt(nodePos.x, nodePos.z) + 0.1f;
 
-            if (defenderNodePrefab != null)
+            // Randomly decide between defender or mine node
+            if (Random.value > 0.5f && defenderNodePrefab != null)
             {
                 GameObject go = Instantiate(defenderNodePrefab, nodePos, Quaternion.identity, transform);
                 DefenderNode dn = go.GetComponent<DefenderNode>();
                 if (dn != null) defenderNodes.Add(dn);
             }
+            else if (miningNodePrefab != null)
+            {
+                GameObject go = Instantiate(miningNodePrefab, nodePos, Quaternion.identity, transform);
+                MiningNode mn = go.GetComponent<MiningNode>();
+                if (mn != null) miningNodes.Add(mn);
+            }
         }
     }
 
-    // helper: get height approximation
+    // Utility: get height from mesh
     public float GetHeightAt(float x, float z)
     {
         int xi = Mathf.Clamp(Mathf.RoundToInt(x), 0, width);
@@ -229,7 +229,6 @@ public class ProceduralMap : MonoBehaviour
 
     Vector3 CatmullRom(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
     {
-        // Formula for Catmull-Rom spline
         return 0.5f * (
             (2f * p1) +
             (-p0 + p2) * t +
@@ -237,6 +236,7 @@ public class ProceduralMap : MonoBehaviour
             (-p0 + 3f * p1 - 3f * p2 + p3) * t * t * t
         );
     }
+
     void ApplyMesh()
     {
         mesh.vertices = vertices;
@@ -246,7 +246,7 @@ public class ProceduralMap : MonoBehaviour
         GetComponent<MeshFilter>().mesh = mesh;
     }
 
-    // Tower spawn point = average where all paths converge
+    // Spawn point where all paths converge
     public Vector3 GetTowerSpawnPoint()
     {
         if (paths == null || paths.Count == 0) return centerPoint;
@@ -262,9 +262,9 @@ public class ProceduralMap : MonoBehaviour
             }
         }
 
-        Vector3 average = sum / count;
-        average.y = GetHeightAt(average.x, average.z);
-        return average;
+        Vector3 avg = sum / count;
+        avg.y = GetHeightAt(avg.x, avg.z);
+        return avg;
     }
 
 #if UNITY_EDITOR
@@ -272,19 +272,36 @@ public class ProceduralMap : MonoBehaviour
     {
         Gizmos.color = Color.red;
         if (paths != null)
+        {
             foreach (var path in paths)
+            {
                 for (int i = 0; i < path.Count - 1; i++)
+                {
                     Gizmos.DrawLine(path[i], path[i + 1]);
+                }
+            }
+        }
 
         Gizmos.color = Color.blue;
         if (spawnPoints != null)
+        {
             foreach (var s in spawnPoints)
-                Gizmos.DrawSphere(s, 0.6f);
+                Gizmos.DrawSphere(s, 0.5f);
+        }
 
         Gizmos.color = Color.green;
         if (defenderNodes != null)
-            foreach (var n in defenderNodes)
-                if (n != null) Gizmos.DrawCube(n.transform.position, Vector3.one * 0.5f);
+        {
+            foreach (var dn in defenderNodes)
+                if (dn != null) Gizmos.DrawCube(dn.transform.position, Vector3.one * 0.4f);
+        }
+
+        Gizmos.color = Color.yellow;
+        if (miningNodes != null)
+        {
+            foreach (var mn in miningNodes)
+                if (mn != null) Gizmos.DrawSphere(mn.transform.position, 0.3f);
+        }
     }
 #endif
 }
