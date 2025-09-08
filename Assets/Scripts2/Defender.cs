@@ -2,53 +2,94 @@ using UnityEngine;
 
 public class Defender : MonoBehaviour
 {
+    [Header("Stats")]
     public int maxHealth = 50;
-    public int attackDamage = 5;
-    public float attackRate = 1.2f;
-    public float attackRange = 4f;
-
     private int currentHealth;
+
+    [Header("Combat")]
+    public float attackRange = 8f;
+    public float attackRate = 1.2f;
+    public int damage = 10;
+    public GameObject impactVFX;
+
     private float attackTimer = 0f;
+
+    [Header("UI")]
+    public GameObject healthBarPrefab;   // assign in Inspector
+    private EnemyHealthBar healthBar;    // reuse same component type for simplicity
 
     void Start()
     {
         currentHealth = maxHealth;
+
+        //  Spawn health bar
+        if (healthBarPrefab != null)
+        {
+            GameObject hb = Instantiate(healthBarPrefab, transform.position + Vector3.up * 2f, Quaternion.identity);
+            hb.transform.SetParent(GameObject.Find("Canvas").transform, false); // assumes world-space canvas
+            healthBar = hb.GetComponent<EnemyHealthBar>(); // using same script as enemies
+            if (healthBar != null)
+            {
+                healthBar.SetHealth(currentHealth, maxHealth);
+            }
+        }
     }
 
     void Update()
     {
         attackTimer += Time.deltaTime;
-
         if (attackTimer >= attackRate)
         {
-            Enemy target = FindEnemyInRange();
+            Enemy target = FindClosestEnemy();
             if (target != null)
             {
-                target.ReceiveDamage(attackDamage);
+                target.ReceiveDamage(damage);
+                if (impactVFX) Instantiate(impactVFX, target.transform.position, Quaternion.identity);
                 attackTimer = 0f;
             }
         }
+
+        //  keep health bar above defender
+        if (healthBar != null)
+        {
+            Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
+            healthBar.transform.position = screenPos;
+        }
     }
 
-    Enemy FindEnemyInRange()
+    Enemy FindClosestEnemy()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, attackRange);
-        foreach (var h in hits)
+        Enemy[] enemies = GameObject.FindObjectsOfType<Enemy>();
+        Enemy closest = null;
+        float minDist = Mathf.Infinity;
+        foreach (Enemy e in enemies)
         {
-            Enemy e = h.GetComponent<Enemy>();
-            if (e != null) return e;
+            float d = Vector3.Distance(transform.position, e.transform.position);
+            if (d < minDist && d <= attackRange)
+            {
+                minDist = d;
+                closest = e;
+            }
         }
-        return null;
+        return closest;
     }
 
     public void ReceiveDamage(int dmg)
     {
         currentHealth -= dmg;
-        if (currentHealth <= 0) Die();
-    }
 
-    void Die()
-    {
-        Destroy(gameObject);
+        //  update health bar
+        if (healthBar != null)
+        {
+            healthBar.SetHealth(currentHealth, maxHealth);
+        }
+
+        if (currentHealth <= 0)
+        {
+            if (healthBar != null)
+                Destroy(healthBar.gameObject);
+
+            Destroy(gameObject);
+        }
     }
 }
