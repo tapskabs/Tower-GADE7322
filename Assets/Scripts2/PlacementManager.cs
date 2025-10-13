@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using static PlacementManager;
 
 public class PlacementManager : MonoBehaviour
 {
@@ -19,12 +19,18 @@ public class PlacementManager : MonoBehaviour
     public GameObject minePrefab;
     public int mineCost = 60;
 
+    [Header("UI Buttons")]
+    public Button defenderButton;
+    public Button mineButton;
+    public Button cancelButton;
+
     private readonly List<BuildNode> nodes = new List<BuildNode>();
 
     void Start()
     {
         CacheNodesFromMap();
         UpdateResourceText();
+        ResetButtonStates();
     }
 
     void CacheNodesFromMap()
@@ -88,7 +94,7 @@ public class PlacementManager : MonoBehaviour
             node.PlaceStructure(defenderPrefab);
             GameManager.Instance.SpendResources(defenderCost);
             UpdateResourceText();
-            currentMode = BuildMode.None;
+            ResetBuildMode();
         }
         else
         {
@@ -103,7 +109,7 @@ public class PlacementManager : MonoBehaviour
             node.PlaceStructure(minePrefab);
             GameManager.Instance.SpendResources(mineCost);
             UpdateResourceText();
-            currentMode = BuildMode.None;
+            ResetBuildMode();
         }
         else
         {
@@ -115,18 +121,25 @@ public class PlacementManager : MonoBehaviour
     {
         currentMode = BuildMode.Defender;
         Debug.Log("Defender Build Mode Activated");
+        UpdateButtonStates();
     }
 
     public void SelectMineMode()
     {
         currentMode = BuildMode.Mine;
         Debug.Log("Mine Build Mode Activated");
+        UpdateButtonStates();
     }
 
     public void CancelBuildMode()
     {
+        ResetBuildMode();
+    }
+
+    void ResetBuildMode()
+    {
         currentMode = BuildMode.None;
-        Debug.Log("Build Mode Cancelled");
+        UpdateButtonStates();
     }
 
     bool IsPointerOverUI()
@@ -140,5 +153,24 @@ public class PlacementManager : MonoBehaviour
         resourceText.text = GameManager.Instance != null
             ? GameManager.Instance.CurrentResources.ToString()
             : "0";
+    }
+
+    void UpdateButtonStates()
+    {
+        if (defenderButton != null)
+            defenderButton.interactable = (currentMode != BuildMode.Defender);
+
+        if (mineButton != null)
+            mineButton.interactable = (currentMode != BuildMode.Mine);
+
+        if (cancelButton != null)
+            cancelButton.interactable = (currentMode != BuildMode.None);
+    }
+
+    void ResetButtonStates()
+    {
+        if (defenderButton != null) defenderButton.interactable = true;
+        if (mineButton != null) mineButton.interactable = true;
+        if (cancelButton != null) cancelButton.interactable = false;
     }
 }
