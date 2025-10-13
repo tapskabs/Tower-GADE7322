@@ -1,23 +1,25 @@
 using System.Collections.Generic;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 using UnityEngine.EventSystems;
+using static PlacementManager;
 
 public class PlacementManager : MonoBehaviour
 {
+    public enum BuildMode { None, Defender, Mine }
+    public BuildMode currentMode = BuildMode.None;
+
     [Header("References")]
     public ProceduralMap map;
     public TextMeshProUGUI resourceText;
 
-    [Header("Defenders")]
+    [Header("Prefabs & Costs")]
     public GameObject defenderPrefab;
     public int defenderCost = 50;
-    private readonly List<DefenderNode> defenderNodes = new List<DefenderNode>();
-
-    [Header("Mines")]
     public GameObject minePrefab;
     public int mineCost = 60;
-    private readonly List<MiningNode> miningNodes = new List<MiningNode>();
+
+    private readonly List<BuildNode> nodes = new List<BuildNode>();
 
     void Start()
     {
@@ -25,11 +27,9 @@ public class PlacementManager : MonoBehaviour
         UpdateResourceText();
     }
 
-
     void CacheNodesFromMap()
     {
-        defenderNodes.Clear();
-        miningNodes.Clear();
+        nodes.Clear();
 
         if (map == null)
         {
@@ -40,22 +40,16 @@ public class PlacementManager : MonoBehaviour
         if (map.defenderNodes != null && map.defenderNodes.Count > 0)
         {
             foreach (var dn in map.defenderNodes)
-                if (dn != null) defenderNodes.Add(dn);
-        }
-        else
-        {
-            Debug.Log("PlacementManager: No defender nodes found.");
+                if (dn != null) nodes.Add(dn.GetComponent<BuildNode>());
         }
 
         if (map.miningNodes != null && map.miningNodes.Count > 0)
         {
             foreach (var mn in map.miningNodes)
-                if (mn != null) miningNodes.Add(mn);
+                if (mn != null) nodes.Add(mn.GetComponent<BuildNode>());
         }
-        else
-        {
-            Debug.Log("PlacementManager: No mining nodes found.");
-        }
+
+        Debug.Log($"Cached {nodes.Count} build nodes from map.");
     }
 
     void Update()
@@ -68,35 +62,33 @@ public class PlacementManager : MonoBehaviour
 
     void TryPlaceOnNode()
     {
-        if (Camera.main == null) return;
+        if (Camera.main == null || currentMode == BuildMode.None) return;
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (!Physics.Raycast(ray, out RaycastHit hit, 100f)) return;
 
-     
-        DefenderNode defenderNode = hit.collider.GetComponent<DefenderNode>();
-        if (defenderNode != null && !defenderNode.isOccupied)
-        {
-            TryPlaceDefender(defenderNode);
-            return;
-        }
+        BuildNode node = hit.collider.GetComponent<BuildNode>();
+        if (node == null || node.isOccupied) return;
 
-      
-        MiningNode miningNode = hit.collider.GetComponent<MiningNode>();
-        if (miningNode != null && !miningNode.isOccupied)
+        switch (currentMode)
         {
-            TryPlaceMine(miningNode);
-            return;
+            case BuildMode.Defender:
+                TryPlaceDefender(node);
+                break;
+            case BuildMode.Mine:
+                TryPlaceMine(node);
+                break;
         }
     }
 
-    void TryPlaceDefender(DefenderNode node)
+    void TryPlaceDefender(BuildNode node)
     {
-        if (GameManager.Instance != null && GameManager.Instance.CurrentResources >= defenderCost)
+        if (GameManager.Instance.CurrentResources >= defenderCost)
         {
-            node.PlaceDefender(defenderPrefab);
+            node.PlaceStructure(defenderPrefab);
             GameManager.Instance.SpendResources(defenderCost);
             UpdateResourceText();
+            currentMode = BuildMode.None;
         }
         else
         {
@@ -104,18 +96,37 @@ public class PlacementManager : MonoBehaviour
         }
     }
 
-    void TryPlaceMine(MiningNode node)
+    void TryPlaceMine(BuildNode node)
     {
-        if (GameManager.Instance != null && GameManager.Instance.CurrentResources >= mineCost)
+        if (GameManager.Instance.CurrentResources >= mineCost)
         {
-            node.PlaceMine(minePrefab);
+            node.PlaceStructure(minePrefab);
             GameManager.Instance.SpendResources(mineCost);
             UpdateResourceText();
+            currentMode = BuildMode.None;
         }
         else
         {
             Debug.Log("Not enough resources for mine.");
         }
+    }
+
+    public void SelectDefenderMode()
+    {
+        currentMode = BuildMode.Defender;
+        Debug.Log("Defender Build Mode Activated");
+    }
+
+    public void SelectMineMode()
+    {
+        currentMode = BuildMode.Mine;
+        Debug.Log("Mine Build Mode Activated");
+    }
+
+    public void CancelBuildMode()
+    {
+        currentMode = BuildMode.None;
+        Debug.Log("Build Mode Cancelled");
     }
 
     bool IsPointerOverUI()
