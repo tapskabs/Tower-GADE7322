@@ -1,31 +1,41 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
     [Header("Stats")]
-    public float speed = 3f;
+    public float baseSpeed = 3f;
     public int maxHealth = 40;
     public int damage = 10;
     public float attackRate = 1f;
     public float reachRadius = 1.2f;
 
+    private float currentSpeed;
     private int currentHealth;
+    private float attackTimer = 0f;
+    private bool reachedTower = false;
+
     private Vector3[] route;
     private int currentIndex = 0;
-    private bool reachedTower = false;
-    private float attackTimer = 0f;
 
     private Tower towerTarget;
     private Defender currentDefenderTarget;
-
-    // Reference to the procedural terrain
     private ProceduralMap terrain;
 
     [Header("UI")]
     public GameObject healthBarPrefab;
     private EnemyHealthBar healthBar;
 
-   
+    // 🧊 Status Effects
+    private bool isSlowed = false;
+    private Coroutine slowRoutine;
+    private Coroutine poisonRoutine;
+
+    private void Start()
+    {
+        currentSpeed = baseSpeed;
+    }
+
     public void InitRoute(Vector3[] waypoints, Tower tower)
     {
         route = waypoints;
@@ -33,28 +43,21 @@ public class Enemy : MonoBehaviour
         currentIndex = 0;
         currentHealth = maxHealth;
 
-        // cache terrain once
         terrain = FindObjectOfType<ProceduralMap>();
 
-       
         if (healthBarPrefab != null && healthBar == null)
         {
             GameObject hb = Instantiate(healthBarPrefab, transform.position + Vector3.up * 2f, Quaternion.identity);
-            hb.transform.SetParent(GameObject.Find("Canvas").transform, false); 
+            hb.transform.SetParent(GameObject.Find("Canvas").transform, false);
             healthBar = hb.GetComponent<EnemyHealthBar>();
-            if (healthBar != null)
-            {
-               
-                healthBar.SetHealth(currentHealth, maxHealth);
-            }
+            healthBar?.SetHealth(currentHealth, maxHealth);
         }
     }
 
-    void Update()
+    private void Update()
     {
         if (route == null || route.Length == 0) return;
 
-        
         DetectNearbyDefender();
 
         if (currentDefenderTarget != null)
@@ -70,16 +73,14 @@ public class Enemy : MonoBehaviour
             AttackTower();
         }
 
-       
-        if (healthBar != null)
-        {
-            Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
-            healthBar.transform.position = screenPos;
-        }
+        UpdateHealthBarPosition();
     }
 
-    void MoveAlongPath()
+    //  Movement
+    private void MoveAlongPath()
     {
+        if (currentIndex >= route.Length) return;
+
         Vector3 targetPos = route[currentIndex];
         Vector3 dir = new Vector3(targetPos.x, transform.position.y, targetPos.z) - transform.position;
 
@@ -94,14 +95,13 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            Vector3 move = dir.normalized * speed * Time.deltaTime;
+            Vector3 move = dir.normalized * currentSpeed * Time.deltaTime;
             Vector3 newPos = transform.position + move;
 
-            
             if (terrain != null)
             {
                 float groundY = terrain.GetHeightAt(newPos.x, newPos.z);
-                newPos.y = groundY + 0.1f; 
+                newPos.y = groundY + 0.1f;
             }
 
             transform.position = newPos;
@@ -109,8 +109,8 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    
-    void DetectNearbyDefender()
+    //  Combat
+    private void DetectNearbyDefender()
     {
         currentDefenderTarget = null;
         Collider[] hits = Physics.OverlapSphere(transform.position, reachRadius);
@@ -125,24 +125,25 @@ public class Enemy : MonoBehaviour
         }
     }
 
-   
-    void AttackDefender()
+    private void AttackDefender()
     {
+        if (currentDefenderTarget == null) return;
+
         attackTimer += Time.deltaTime;
-        if (attackTimer >= attackRate && currentDefenderTarget != null)
+        if (attackTimer >= attackRate)
         {
             currentDefenderTarget.ReceiveDamage(damage);
             attackTimer = 0f;
         }
     }
 
-    
-    void AttackTower()
+    private void AttackTower()
     {
-        attackTimer += Time.deltaTime;
         if (towerTarget == null) return;
 
+        attackTimer += Time.deltaTime;
         float dist = Vector3.Distance(transform.position, towerTarget.transform.position);
+
         if (dist <= reachRadius)
         {
             if (attackTimer >= attackRate)
@@ -153,9 +154,8 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-           
             Vector3 moveDir = (towerTarget.transform.position - transform.position).normalized;
-            Vector3 newPos = transform.position + moveDir * speed * Time.deltaTime;
+            Vector3 newPos = transform.position + moveDir * currentSpeed * Time.deltaTime;
 
             if (terrain != null)
             {
@@ -168,27 +168,66 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    // ❤️ Damage
     public void ReceiveDamage(int dmg)
     {
         currentHealth -= dmg;
-
-        // ✅ Update bar properly
-        if (healthBar != null)
-        {
-            healthBar.SetHealth(currentHealth, maxHealth);
-        }
+        healthBar?.SetHealth(currentHealth, maxHealth);
 
         if (currentHealth <= 0) Die();
     }
 
-    void Die()
+    //  Apply Slow
+    public void ApplySlow(float slowFactor, float duration)
+    {
+        if (slowRoutine != null) StopCoroutine(slowRoutine);
+        slowRoutine = StartCoroutine(SlowEffect(slowFactor, duration));
+    }
+
+    private IEnumerator SlowEffect(float factor, float duration)
+    {
+        isSlowed = true;
+        currentSpeed = baseSpeed * factor;
+
+        yield return new WaitForSeconds(duration);
+
+        currentSpeed = baseSpeed;
+        isSlowed = false;
+    }
+
+    //  Apply Poison
+    public void ApplyPoison(int tickDamage, float duration, float tickRate)
+    {
+        if (poisonRoutine != null) StopCoroutine(poisonRoutine);
+        poisonRoutine = StartCoroutine(PoisonEffect(tickDamage, duration, tickRate));
+    }
+
+    private IEnumerator PoisonEffect(int dmg, float duration, float tickRate)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            ReceiveDamage(dmg);
+            yield return new WaitForSeconds(tickRate);
+            elapsed += tickRate;
+        }
+    }
+
+    // 🩸 Death
+    private void Die()
     {
         GameManager.Instance?.AddResources(10);
 
-        // ✅ remove health bar when enemy dies
         if (healthBar != null)
             Destroy(healthBar.gameObject);
 
         Destroy(gameObject);
+    }
+
+    private void UpdateHealthBarPosition()
+    {
+        if (healthBar == null) return;
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
+        healthBar.transform.position = screenPos;
     }
 }

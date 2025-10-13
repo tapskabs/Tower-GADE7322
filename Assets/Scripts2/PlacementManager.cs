@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 
 public class PlacementManager : MonoBehaviour
 {
-    public enum BuildMode { None, Defender, Mine }
+    public enum BuildMode { None, Defender, Mine, SlowDefender, PoisonDefender }
     public BuildMode currentMode = BuildMode.None;
 
     [Header("References")]
@@ -18,10 +18,16 @@ public class PlacementManager : MonoBehaviour
     public int defenderCost = 50;
     public GameObject minePrefab;
     public int mineCost = 60;
+    public GameObject slowDefenderPrefab;
+    public int slowDefenderCost = 80;
+    public GameObject poisonDefenderPrefab;
+    public int poisonDefenderCost = 100;
 
     [Header("UI Buttons")]
     public Button defenderButton;
     public Button mineButton;
+    public Button slowDefenderButton;
+    public Button poisonDefenderButton;
     public Button cancelButton;
 
     private readonly List<BuildNode> nodes = new List<BuildNode>();
@@ -64,6 +70,12 @@ public class PlacementManager : MonoBehaviour
         {
             TryPlaceOnNode();
         }
+
+        // Right-click cancels placement
+        if (Input.GetMouseButtonDown(1))
+        {
+            ResetBuildMode();
+        }
     }
 
     void TryPlaceOnNode()
@@ -79,44 +91,36 @@ public class PlacementManager : MonoBehaviour
         switch (currentMode)
         {
             case BuildMode.Defender:
-                TryPlaceDefender(node);
+                TryPlaceStructure(node, defenderPrefab, defenderCost);
                 break;
             case BuildMode.Mine:
-                TryPlaceMine(node);
+                TryPlaceStructure(node, minePrefab, mineCost);
+                break;
+            case BuildMode.SlowDefender:
+                TryPlaceStructure(node, slowDefenderPrefab, slowDefenderCost);
+                break;
+            case BuildMode.PoisonDefender:
+                TryPlaceStructure(node, poisonDefenderPrefab, poisonDefenderCost);
                 break;
         }
     }
 
-    void TryPlaceDefender(BuildNode node)
+    void TryPlaceStructure(BuildNode node, GameObject prefab, int cost)
     {
-        if (GameManager.Instance.CurrentResources >= defenderCost)
+        if (GameManager.Instance.CurrentResources >= cost)
         {
-            node.PlaceStructure(defenderPrefab);
-            GameManager.Instance.SpendResources(defenderCost);
+            node.PlaceStructure(prefab);
+            GameManager.Instance.SpendResources(cost);
             UpdateResourceText();
             ResetBuildMode();
         }
         else
         {
-            Debug.Log("Not enough resources for defender.");
+            Debug.Log("Not enough resources.");
         }
     }
 
-    void TryPlaceMine(BuildNode node)
-    {
-        if (GameManager.Instance.CurrentResources >= mineCost)
-        {
-            node.PlaceStructure(minePrefab);
-            GameManager.Instance.SpendResources(mineCost);
-            UpdateResourceText();
-            ResetBuildMode();
-        }
-        else
-        {
-            Debug.Log("Not enough resources for mine.");
-        }
-    }
-
+    // --- UI Button Methods ---
     public void SelectDefenderMode()
     {
         currentMode = BuildMode.Defender;
@@ -128,6 +132,20 @@ public class PlacementManager : MonoBehaviour
     {
         currentMode = BuildMode.Mine;
         Debug.Log("Mine Build Mode Activated");
+        UpdateButtonStates();
+    }
+
+    public void SelectSlowDefenderMode()
+    {
+        currentMode = BuildMode.SlowDefender;
+        Debug.Log("Slow Defender Build Mode Activated");
+        UpdateButtonStates();
+    }
+
+    public void SelectPoisonDefenderMode()
+    {
+        currentMode = BuildMode.PoisonDefender;
+        Debug.Log("Poison Defender Build Mode Activated");
         UpdateButtonStates();
     }
 
@@ -163,6 +181,12 @@ public class PlacementManager : MonoBehaviour
         if (mineButton != null)
             mineButton.interactable = (currentMode != BuildMode.Mine);
 
+        if (slowDefenderButton != null)
+            slowDefenderButton.interactable = (currentMode != BuildMode.SlowDefender);
+
+        if (poisonDefenderButton != null)
+            poisonDefenderButton.interactable = (currentMode != BuildMode.PoisonDefender);
+
         if (cancelButton != null)
             cancelButton.interactable = (currentMode != BuildMode.None);
     }
@@ -171,6 +195,8 @@ public class PlacementManager : MonoBehaviour
     {
         if (defenderButton != null) defenderButton.interactable = true;
         if (mineButton != null) mineButton.interactable = true;
+        if (slowDefenderButton != null) slowDefenderButton.interactable = true;
+        if (poisonDefenderButton != null) poisonDefenderButton.interactable = true;
         if (cancelButton != null) cancelButton.interactable = false;
     }
 }
