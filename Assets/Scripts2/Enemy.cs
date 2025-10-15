@@ -31,7 +31,7 @@ public class Enemy : MonoBehaviour
     private Coroutine slowRoutine;
     private Coroutine poisonRoutine;
 
-    private void Start()
+    protected virtual void Start()
     {
         currentSpeed = baseSpeed;
     }
@@ -213,7 +213,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // 🩸 Death
+    //Death
     private void Die()
     {
         GameManager.Instance?.AddResources(10);
