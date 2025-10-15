@@ -178,7 +178,7 @@ public class Enemy : MonoBehaviour
     }
 
     //  Apply Slow
-    public void ApplySlow(float slowFactor, float duration)
+    public virtual void ApplySlow(float slowFactor, float duration)
     {
         if (slowRoutine != null) StopCoroutine(slowRoutine);
         slowRoutine = StartCoroutine(SlowEffect(slowFactor, duration));
@@ -196,7 +196,7 @@ public class Enemy : MonoBehaviour
     }
 
     //  Apply Poison
-    public void ApplyPoison(int tickDamage, float duration, float tickRate)
+    public virtual void ApplyPoison(int tickDamage, float duration, float tickRate)
     {
         if (poisonRoutine != null) StopCoroutine(poisonRoutine);
         poisonRoutine = StartCoroutine(PoisonEffect(tickDamage, duration, tickRate));
