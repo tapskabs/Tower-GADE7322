@@ -10,26 +10,28 @@ public class Enemy : MonoBehaviour
     public float attackRate = 1f;
     public float reachRadius = 1.2f;
 
-    private float currentSpeed;
-    private int currentHealth;
-    private float attackTimer = 0f;
-    private bool reachedTower = false;
+    // made protected so subclasses can read/modify them
+    protected float currentSpeed;
+    protected int currentHealth;
+    protected float attackTimer = 0f;
+    protected bool reachedTower = false;
 
-    private Vector3[] route;
-    private int currentIndex = 0;
+    // route and towerTarget need to be accessible to subclasses (e.g. SplitterEnemy)
+    protected Vector3[] route;
+    protected int currentIndex = 0;
 
-    private Tower towerTarget;
-    private Defender currentDefenderTarget;
-    private ProceduralMap terrain;
+    protected Tower towerTarget;
+    protected Defender currentDefenderTarget;
+    private ProceduralMap terrain; // terrain can remain private if not needed by subclasses
 
     [Header("UI")]
     public GameObject healthBarPrefab;
-    private EnemyHealthBar healthBar;
+    protected EnemyHealthBar healthBar; // protected so subclasses can destroy or update it
 
     // 🧊 Status Effects
-    private bool isSlowed = false;
-    private Coroutine slowRoutine;
-    private Coroutine poisonRoutine;
+    protected bool isSlowed = false;
+    protected Coroutine slowRoutine;
+    protected Coroutine poisonRoutine;
 
     protected virtual void Start()
     {
@@ -101,7 +103,8 @@ public class Enemy : MonoBehaviour
             if (terrain != null)
             {
                 float groundY = terrain.GetHeightAt(newPos.x, newPos.z);
-                newPos.y = groundY + 0.1f;
+                // smooth height interpolation to avoid jitter and clipping
+                newPos.y = Mathf.Lerp(transform.position.y, groundY + 0.2f, 10f * Time.deltaTime);
             }
 
             transform.position = newPos;
@@ -116,6 +119,16 @@ public class Enemy : MonoBehaviour
         Collider[] hits = Physics.OverlapSphere(transform.position, reachRadius);
         foreach (var hit in hits)
         {
+            // check modern DefenderBase first, then legacy Defender (if present)
+            DefenderBase db = hit.GetComponent<DefenderBase>();
+            if (db != null)
+            {
+                // convert to Defender so AttackDefender can call ReceiveDamage (we'll call base method via interface)
+                // keep Defender reference for legacy compatibility
+                currentDefenderTarget = hit.GetComponent<Defender>();
+                break;
+            }
+
             Defender d = hit.GetComponent<Defender>();
             if (d != null)
             {
@@ -132,7 +145,18 @@ public class Enemy : MonoBehaviour
         attackTimer += Time.deltaTime;
         if (attackTimer >= attackRate)
         {
-            currentDefenderTarget.ReceiveDamage(damage);
+            // Try to call ReceiveDamage on DefenderBase first (if component exists)
+            DefenderBase baseDef = currentDefenderTarget.GetComponent<DefenderBase>();
+            if (baseDef != null)
+            {
+                baseDef.ReceiveDamage(damage);
+            }
+            else
+            {
+                // legacy Defender
+                currentDefenderTarget.ReceiveDamage(damage);
+            }
+
             attackTimer = 0f;
         }
     }
@@ -184,7 +208,7 @@ public class Enemy : MonoBehaviour
         slowRoutine = StartCoroutine(SlowEffect(slowFactor, duration));
     }
 
-    private IEnumerator SlowEffect(float factor, float duration)
+    protected virtual IEnumerator SlowEffect(float factor, float duration)
     {
         isSlowed = true;
         currentSpeed = baseSpeed * factor;
@@ -202,7 +226,7 @@ public class Enemy : MonoBehaviour
         poisonRoutine = StartCoroutine(PoisonEffect(tickDamage, duration, tickRate));
     }
 
-    private IEnumerator PoisonEffect(int dmg, float duration, float tickRate)
+    protected virtual IEnumerator PoisonEffect(int dmg, float duration, float tickRate)
     {
         float elapsed = 0f;
         while (elapsed < duration)
@@ -213,8 +237,8 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    //Death
-    private void Die()
+    // 🩸 Death - make protected virtual so subclasses can override & call base
+    protected virtual void Die()
     {
         GameManager.Instance?.AddResources(10);
 
