@@ -121,12 +121,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 860cad84f7f5d8f4baf38ccee3c2fccb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseSpeed: 3
+  baseSpeed: 1
   maxHealth: 40
   damage: 10
   attackRate: 1
   reachRadius: 1.2
-  healthBarPrefab: {fileID: 8281758385078470274, guid: b80b958a5a67de84c9c4b54e804e031b, type: 3}
+  healthBarPrefab: {fileID: 5283748656744593292, guid: 44825691a94027543a1e36cd538cd36d, type: 3}
   healthMultiplier: 2.5
   speedMultiplier: 0.6
   statusResistance: 0.5

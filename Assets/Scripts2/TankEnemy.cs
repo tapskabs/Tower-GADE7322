@@ -7,8 +7,6 @@ public class TankEnemy : Enemy
     public float speedMultiplier = 0.6f;
     public float statusResistance = 0.5f; // 50% reduced slow/poison effect
 
-    [Header("UI")]
-    public GameObject healthBarPrefab;   // Assign same prefab used by normal enemies
 
     protected override void Start()
     {
@@ -19,14 +17,7 @@ public class TankEnemy : Enemy
         maxHealth = Mathf.RoundToInt(maxHealth * healthMultiplier);
         currentHealth = maxHealth;
 
-        // Spawn health bar
-        if (healthBarPrefab != null && healthBar == null)
-        {
-            GameObject hb = Instantiate(healthBarPrefab, transform.position + Vector3.up * 2f, Quaternion.identity);
-            hb.transform.SetParent(GameObject.Find("Canvas").transform, false);
-            healthBar = hb.GetComponent<EnemyHealthBar>();
-            healthBar?.SetHealth(currentHealth, maxHealth);
-        }
+        
     }
 
     public override void ApplySlow(float slowFactor, float duration)
