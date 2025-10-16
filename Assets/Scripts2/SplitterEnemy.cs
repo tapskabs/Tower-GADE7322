@@ -5,25 +5,44 @@ using UnityEngine;
 public class SplitterEnemy : Enemy
 {
     [Header("Splitter Enemy Settings")]
-    public GameObject miniEnemyPrefab;   // assign small enemy prefab in Unity
-    public int splitCount = 2;           // how many spawn on death
-    public float miniSpawnSpread = 1.5f;
-    public float miniLifespan = 8f;      // how long minis last before despawning
-    public float miniDamageMultiplier = 0.5f; // minis do 50% of normal damage
-    public float miniSpeedMultiplier = 1.3f;  // minis move faster
+    public GameObject miniEnemyPrefab;      // Prefab for the mini enemies
+    public int splitCount = 2;              // How many minis spawn on death
+    public float miniSpawnSpread = 1.5f;    // Random spawn offset
+    public float miniLifespan = 8f;         // How long minis exist before despawning
+    public float miniDamageMultiplier = 0.5f; // Minis do half normal damage
+    public float miniSpeedMultiplier = 1.3f;  // Minis move slightly faster
+
     private IDamageableDefender currentDefenderTarget;
+
+    // Slightly faster than base enemies
     protected override void Start()
     {
         base.Start();
-        baseSpeed *= 1.2f; // slightly faster than default enemy
+        baseSpeed *= 1.2f;
     }
 
+    // --- Death Handling ---
+    protected override void Die()
+    {
+        StartCoroutine(SpawnAfterDelay());
+    }
+
+    private IEnumerator SpawnAfterDelay()
+    {
+        yield return new WaitForSeconds(0.15f);
+        SpawnMiniEnemies();
+        base.Die();
+    }
+
+    // --- Spawn Minis ---
     private void SpawnMiniEnemies()
     {
-        if (miniEnemyPrefab == null || route == null || towerTarget == null) return;
+        if (miniEnemyPrefab == null || route == null || towerTarget == null)
+            return;
 
         for (int i = 0; i < splitCount; i++)
         {
+            // Spawn position with small random offset
             Vector3 offset = new Vector3(
                 Random.Range(-miniSpawnSpread, miniSpawnSpread),
                 0,
@@ -32,7 +51,7 @@ public class SplitterEnemy : Enemy
 
             Vector3 spawnPos = transform.position + offset;
 
-            // Align to map height if map exists
+            // Align Y with terrain
             ProceduralMap map = FindObjectOfType<ProceduralMap>();
             if (map != null)
             {
@@ -41,34 +60,66 @@ public class SplitterEnemy : Enemy
 
             GameObject clone = Instantiate(miniEnemyPrefab, spawnPos, Quaternion.identity);
             Enemy mini = clone.GetComponent<Enemy>();
+
             if (mini != null)
             {
-                // Initialize movement route and target tower
+                // Align to route and tower
+                Vector3 safeStart = GetClosestPointOnRoute(route, spawnPos);
+                mini.transform.position = safeStart;
                 mini.InitRoute(route, towerTarget);
 
-                // Adjust stats to make them unique
+                // Adjust stats for minis
                 mini.maxHealth = Mathf.RoundToInt(this.maxHealth * 0.4f);
-                mini.ReceiveDamage(0); // refresh health bar visuals
                 mini.baseSpeed *= miniSpeedMultiplier;
+                mini.damage = Mathf.RoundToInt(this.damage * miniDamageMultiplier);
+                mini.ReceiveDamage(0); // refresh health UI
 
-                // Reduce attack damage if minis can attack
-                if (mini is SplitMiniEnemy miniScript)
-                {
-                    miniScript.SetDamageMultiplier(miniDamageMultiplier);
-                    miniScript.StartSelfDestruct(miniLifespan);
-                }
-                else
-                {
-                    // fallback for normal Enemy-derived minis
-                    mini.StartCoroutine(DespawnAfterTime(mini, miniLifespan));
-                }
+                // Add self-despawn after lifespan
+                mini.StartCoroutine(DespawnAfterTime(mini, miniLifespan));
             }
         }
     }
+
+    // --- Helper: Find Closest Route Point ---
+    private Vector3 GetClosestPointOnRoute(IEnumerable<Vector3> routePoints, Vector3 fromPos)
+    {
+        if (routePoints == null) return fromPos;
+
+        Vector3 closest = fromPos;
+        float minDist = float.MaxValue;
+
+        foreach (var point in routePoints)
+        {
+            float d = Vector3.SqrMagnitude(point - fromPos);
+            if (d < minDist)
+            {
+                minDist = d;
+                closest = point;
+            }
+        }
+
+        // Snap to terrain height
+        ProceduralMap map = FindObjectOfType<ProceduralMap>();
+        if (map != null)
+            closest.y = map.GetHeightAt(closest.x, closest.z) + 0.4f;
+
+        return closest;
+    }
+
+    // --- Despawn Mini after timer ---
+    private IEnumerator DespawnAfterTime(Enemy e, float time)
+    {
+        yield return new WaitForSeconds(time);
+        if (e != null)
+        {
+            e.ReceiveDamage(e.maxHealth); // kills mini cleanly
+        }
+    }
+
+    // --- Defender Detection & Attack ---
     private void DetectNearbyDefender()
     {
         currentDefenderTarget = null;
-
         Collider[] hits = Physics.OverlapSphere(transform.position, reachRadius);
         float closestDist = Mathf.Infinity;
 
@@ -89,6 +140,7 @@ public class SplitterEnemy : Enemy
             }
         }
     }
+
     private void AttackDefender()
     {
         if (currentDefenderTarget == null) return;
@@ -101,34 +153,12 @@ public class SplitterEnemy : Enemy
         }
     }
 
-    private IEnumerator DespawnAfterTime(Enemy e, float time)
-    {
-        yield return new WaitForSeconds(time);
-
-        if (e != null)
-        {
-            e.ReceiveDamage(e.maxHealth); // effectively kills it cleanly
-        }
-    }
-
-    // --- Death Handling ---
-    protected override void Die()
-    {
-        StartCoroutine(SpawnAfterDelay());
-    }
-
-    private IEnumerator SpawnAfterDelay()
-    {
-        yield return new WaitForSeconds(0.15f);
-        SpawnMiniEnemies();
-        base.Die();
-    }
-
-    // --- Update keeps health bar correctly positioned ---
+    // --- Update keeps health bar aligned ---
     protected override void Update()
     {
         base.Update();
 
+        // Keep health bar following enemy
         if (healthBar != null)
         {
             Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
