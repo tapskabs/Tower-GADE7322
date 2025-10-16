@@ -56,7 +56,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    private void Update()
+    protected virtual void Update()
     {
         if (route == null || route.Length == 0) return;
 

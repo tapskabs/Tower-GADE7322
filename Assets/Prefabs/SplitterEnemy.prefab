@@ -127,6 +127,6 @@ MonoBehaviour:
   attackRate: 1
   reachRadius: 1.2
   healthBarPrefab: {fileID: 5516925588339498382, guid: 97a74146e28b2f348bab0b4f1aea424b, type: 3}
-  miniEnemyPrefab: {fileID: 0}
+  miniEnemyPrefab: {fileID: 375732364036357282, guid: 0629e69342cf86042ba009d9e4f86410, type: 3}
   splitCount: 2
   miniSpawnSpread: 1.5
