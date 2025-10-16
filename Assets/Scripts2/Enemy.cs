@@ -143,7 +143,7 @@ public class Enemy : MonoBehaviour
     }
 
 
-    // --- UPDATED defender attack ---
+   
     private void AttackDefender()
     {
         if (currentDefenderTarget == null) return;
@@ -189,7 +189,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // ❤️ Damage
+    //Damage
     public void ReceiveDamage(int dmg)
     {
         currentHealth -= dmg;
@@ -198,7 +198,7 @@ public class Enemy : MonoBehaviour
         if (currentHealth <= 0) Die();
     }
 
-    //  Apply Slow
+    //Apply Slow
     public virtual void ApplySlow(float slowFactor, float duration)
     {
         if (slowRoutine != null) StopCoroutine(slowRoutine);
@@ -216,7 +216,7 @@ public class Enemy : MonoBehaviour
         isSlowed = false;
     }
 
-    //  Apply Poison
+    //Apply Poison
     public virtual void ApplyPoison(int tickDamage, float duration, float tickRate)
     {
         if (poisonRoutine != null) StopCoroutine(poisonRoutine);
@@ -234,7 +234,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // 🩸 Death - make protected virtual so subclasses can override & call base
+    //Death 
     protected virtual void Die()
     {
         GameManager.Instance?.AddResources(10);
