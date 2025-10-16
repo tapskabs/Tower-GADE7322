@@ -122,7 +122,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   baseSpeed: 3
-  maxHealth: 40
+  maxHealth: 60
   damage: 10
   attackRate: 1
   reachRadius: 3.5

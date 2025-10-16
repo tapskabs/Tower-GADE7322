@@ -22,101 +22,44 @@ public class Spawner : MonoBehaviour
 
     void Start()
     {
-        if (map == null)
-        {
-            map = FindObjectOfType<ProceduralMap>();
-            if (map == null)
-            {
-                Debug.LogError("Spawner: No ProceduralMap found in scene!");
-                return;
-            }
-        }
-
-        if (tower == null)
-        {
-            tower = FindObjectOfType<Tower>();
-            if (tower == null)
-            {
-                Debug.LogError("Spawner: No Tower found in scene!");
-                return;
-            }
-        }
-
-        StartCoroutine(SpawnLoop());
+        if (map == null) map = FindObjectOfType<ProceduralMap>();
+        if (tower == null) tower = FindObjectOfType<Tower>();
     }
 
-    IEnumerator SpawnLoop()
+    // --- Used by ProceduralWaveManager ---
+    public Enemy SpawnEnemyDirect(float healthMult = 1f, float damageMult = 1f)
     {
-        yield return new WaitForSeconds(1f);
+        if (map == null || map.spawnPoints.Count == 0) return null;
 
-        while (true)
-        {
-            SpawnEnemy();
-            yield return new WaitForSeconds(spawnInterval);
-        }
-    }
-
-    void SpawnEnemy()
-    {
-        if (map == null || map.spawnPoints.Count == 0)
-        {
-            Debug.LogWarning("Spawner: No spawn points found.");
-            return;
-        }
-
-        // Choose path and spawn position
-        int p = nextPathIndex % map.paths.Count;
-        nextPathIndex++;
-
+        int p = Random.Range(0, map.paths.Count);
         Vector3 spawnPos = map.spawnPoints[p];
+        spawnPos.y = map.GetHeightAt(spawnPos.x, spawnPos.z) + 0.2f;
 
-        // --- Align to terrain height to avoid clipping ---
-        float terrainY = map.GetHeightAt(spawnPos.x, spawnPos.z);
-        spawnPos.y = terrainY + 0.2f;
+        GameObject prefab = ChooseEnemyType();
+        if (prefab == null) return null;
 
-        // --- Choose enemy type ---
-        GameObject prefabToSpawn = ChooseEnemyType();
-
-        if (prefabToSpawn == null)
-        {
-            Debug.LogWarning("Spawner: No prefab assigned to spawn!");
-            return;
-        }
-
-        // --- Instantiate enemy ---
-        GameObject enemyObj = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
-
-        // --- Initialize enemy route ---
+        GameObject enemyObj = Instantiate(prefab, spawnPos, Quaternion.identity);
         Enemy enemy = enemyObj.GetComponent<Enemy>();
+
         if (enemy != null)
         {
-            List<Vector3> path = map.paths[p];
-            enemy.InitRoute(path.ToArray(), tower);
+            enemy.InitRoute(map.paths[p].ToArray(), tower);
+            enemy.maxHealth = Mathf.RoundToInt(enemy.maxHealth * healthMult);
+            enemy.damage = Mathf.RoundToInt(enemy.damage * damageMult);
         }
-        else
-        {
-            Debug.LogWarning($"Spawner: {prefabToSpawn.name} has no Enemy component!");
-        }
+
+        return enemy;
     }
 
-    // ---------------------------------------------------
-    // Randomly choose which enemy type to spawn
-    // ---------------------------------------------------
     GameObject ChooseEnemyType()
     {
         float roll = Random.value;
 
         if (roll < splitterSpawnChance)
-        {
             return splitterEnemyPrefab;
-        }
         else if (roll < splitterSpawnChance + tankSpawnChance)
-        {
             return tankEnemyPrefab;
-        }
         else
-        {
             return basicEnemyPrefab;
-        }
     }
 }
