@@ -32,7 +32,7 @@ public class Enemy : MonoBehaviour
     protected bool isSlowed = false;
     protected Coroutine slowRoutine;
     protected Coroutine poisonRoutine;
-
+    private bool initialized = false;
     protected virtual void Start()
     {
         currentSpeed = baseSpeed;
@@ -44,9 +44,11 @@ public class Enemy : MonoBehaviour
         towerTarget = tower;
         currentIndex = 0;
         currentHealth = maxHealth;
-
         terrain = FindObjectOfType<ProceduralMap>();
 
+        initialized = true; // ✅ mark as ready
+
+        // health bar spawn moved here from Start()
         if (healthBarPrefab != null && healthBar == null)
         {
             GameObject hb = Instantiate(healthBarPrefab, transform.position + Vector3.up * 2f, Quaternion.identity);

@@ -130,3 +130,6 @@ MonoBehaviour:
   miniEnemyPrefab: {fileID: 8739101357986322481, guid: 9a13e5854d1df784b9f49e7f6c28c283, type: 3}
   splitCount: 2
   miniSpawnSpread: 1.5
+  miniLifespan: 20
+  miniDamageMultiplier: 1
+  miniSpeedMultiplier: 1.3

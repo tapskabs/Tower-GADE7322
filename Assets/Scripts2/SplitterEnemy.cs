@@ -5,18 +5,17 @@ using UnityEngine;
 public class SplitterEnemy : Enemy
 {
     [Header("Splitter Enemy Settings")]
-    public GameObject miniEnemyPrefab;  // assign small enemy prefab in Unity
-    public int splitCount = 2;          // how many spawn on death
+    public GameObject miniEnemyPrefab;   // assign small enemy prefab in Unity
+    public int splitCount = 2;           // how many spawn on death
     public float miniSpawnSpread = 1.5f;
-
-    
+    public float miniLifespan = 8f;      // how long minis last before despawning
+    public float miniDamageMultiplier = 0.5f; // minis do 50% of normal damage
+    public float miniSpeedMultiplier = 1.3f;  // minis move faster
 
     protected override void Start()
     {
         base.Start();
         baseSpeed *= 1.2f; // slightly faster than default enemy
-
-        
     }
 
     private void SpawnMiniEnemies()
@@ -44,25 +43,49 @@ public class SplitterEnemy : Enemy
             Enemy mini = clone.GetComponent<Enemy>();
             if (mini != null)
             {
+                // Initialize movement route and target tower
                 mini.InitRoute(route, towerTarget);
+
+                // Adjust stats to make them unique
+                mini.maxHealth = Mathf.RoundToInt(this.maxHealth * 0.4f);
+                mini.ReceiveDamage(0); // refresh health bar visuals
+                mini.baseSpeed *= miniSpeedMultiplier;
+
+                // Reduce attack damage if minis can attack
+                if (mini is SplitMiniEnemy miniScript)
+                {
+                    miniScript.SetDamageMultiplier(miniDamageMultiplier);
+                    miniScript.StartSelfDestruct(miniLifespan);
+                }
+                else
+                {
+                    // fallback for normal Enemy-derived minis
+                    mini.StartCoroutine(DespawnAfterTime(mini, miniLifespan));
+                }
             }
         }
     }
+
+    private IEnumerator DespawnAfterTime(Enemy e, float time)
+    {
+        yield return new WaitForSeconds(time);
+
+        if (e != null)
+        {
+            e.ReceiveDamage(e.maxHealth); // effectively kills it cleanly
+        }
+    }
+
+    // --- Death Handling ---
     protected override void Die()
     {
-        // Start the coroutine that handles delayed splitting and cleanup
         StartCoroutine(SpawnAfterDelay());
     }
 
     private IEnumerator SpawnAfterDelay()
     {
-        // Optional short pause for visual timing (adjust as needed)
         yield return new WaitForSeconds(0.15f);
-
-        // Spawn mini enemies
         SpawnMiniEnemies();
-
-        // Now call the base Die() to remove health bar, add resources, and destroy this enemy
         base.Die();
     }
 
