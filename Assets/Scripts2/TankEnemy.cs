@@ -6,7 +6,7 @@ public class TankEnemy : Enemy
     public float healthMultiplier = 2.5f;
     public float speedMultiplier = 0.6f;
     public float statusResistance = 0.5f; // 50% reduced slow/poison effect
-
+    private IDamageableDefender currentDefenderTarget;
 
     protected override void Start()
     {
@@ -34,6 +34,41 @@ public class TankEnemy : Enemy
         int reducedDamage = Mathf.RoundToInt(tickDamage * statusResistance);
         float reducedDuration = duration * statusResistance;
         base.ApplyPoison(reducedDamage, reducedDuration, tickRate);
+    }
+    private void DetectNearbyDefender()
+    {
+        currentDefenderTarget = null;
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, reachRadius);
+        float closestDist = Mathf.Infinity;
+
+        foreach (var hit in hits)
+        {
+            if (hit.CompareTag("Defender"))
+            {
+                IDamageableDefender dmgDef = hit.GetComponent<IDamageableDefender>();
+                if (dmgDef != null)
+                {
+                    float dist = Vector3.Distance(transform.position, dmgDef.GetPosition());
+                    if (dist < closestDist)
+                    {
+                        closestDist = dist;
+                        currentDefenderTarget = dmgDef;
+                    }
+                }
+            }
+        }
+    }
+    private void AttackDefender()
+    {
+        if (currentDefenderTarget == null) return;
+
+        attackTimer += Time.deltaTime;
+        if (attackTimer >= attackRate)
+        {
+            currentDefenderTarget.ReceiveDamage(damage);
+            attackTimer = 0f;
+        }
     }
 
     protected override void Update()

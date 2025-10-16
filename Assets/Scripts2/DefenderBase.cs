@@ -53,6 +53,11 @@ public abstract class DefenderBase : MonoBehaviour
             healthBar.transform.position = screenPos;
         }
     }
+    public interface IDamageableDefender
+    {
+        void ReceiveDamage(int dmg);
+        Vector3 GetPosition();
+    }
 
     protected abstract void Attack();
 

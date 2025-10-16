@@ -1,8 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-
-
 public class SplitMiniEnemy : Enemy
 {
     [Header("Mini Behaviour Settings")]
@@ -12,6 +10,8 @@ public class SplitMiniEnemy : Enemy
 
     private float damageMultiplier = 1f;
     private bool isSelfDestructing = false;
+
+    private IDamageableDefender currentDefenderTarget;
 
     public void SetDamageMultiplier(float mult)
     {
@@ -29,18 +29,17 @@ public class SplitMiniEnemy : Enemy
         isSelfDestructing = true;
         yield return new WaitForSeconds(lifetime);
 
-        // Cleanly die after lifespan
         if (this != null)
             ReceiveDamage(maxHealth);
     }
 
     protected override void Update()
     {
-        base.Update(); // keep movement and other logic from Enemy
+        base.Update(); // keeps movement & tower logic
 
         attackTimer += Time.deltaTime;
 
-        // Detect defenders in range
+        // Detect closest defender in range
         DetectNearbyDefender();
 
         if (currentDefenderTarget != null && attackTimer >= attackInterval)
@@ -50,47 +49,33 @@ public class SplitMiniEnemy : Enemy
         }
     }
 
-    // Detect any defender (DefenderBase or legacy Defender) within attackRange
     private void DetectNearbyDefender()
     {
         currentDefenderTarget = null;
+        float closestDist = Mathf.Infinity;
+
         Collider[] hits = Physics.OverlapSphere(transform.position, attackRange);
         foreach (var hit in hits)
         {
-            DefenderBase db = hit.GetComponent<DefenderBase>();
-            if (db != null)
-            {
-                currentDefenderTarget = hit.GetComponent<Defender>(); // keep legacy reference
-                break;
-            }
+            if (!hit.CompareTag("Defender")) continue;
 
-            Defender d = hit.GetComponent<Defender>();
-            if (d != null)
+            IDamageableDefender dmgDef = hit.GetComponent<IDamageableDefender>();
+            if (dmgDef == null) continue;
+
+            float dist = Vector3.Distance(transform.position, dmgDef.GetPosition());
+            if (dist < closestDist)
             {
-                currentDefenderTarget = d;
-                break;
+                closestDist = dist;
+                currentDefenderTarget = dmgDef;
             }
         }
     }
 
-    // Attack the detected defender
     private void AttackDefender()
     {
         if (currentDefenderTarget == null) return;
 
         int dealtDamage = Mathf.RoundToInt(damage * damageMultiplier);
-
-        // Prefer DefenderBase (supports Slow/Poison)
-        DefenderBase baseDef = currentDefenderTarget.GetComponent<DefenderBase>();
-        if (baseDef != null)
-        {
-            baseDef.ReceiveDamage(dealtDamage);
-        }
-        else
-        {
-            // Legacy Defender fallback
-            currentDefenderTarget.ReceiveDamage(dealtDamage);
-        }
+        currentDefenderTarget.ReceiveDamage(dealtDamage);
     }
-
 }

@@ -11,7 +11,7 @@ public class SplitterEnemy : Enemy
     public float miniLifespan = 8f;      // how long minis last before despawning
     public float miniDamageMultiplier = 0.5f; // minis do 50% of normal damage
     public float miniSpeedMultiplier = 1.3f;  // minis move faster
-
+    private IDamageableDefender currentDefenderTarget;
     protected override void Start()
     {
         base.Start();
@@ -63,6 +63,41 @@ public class SplitterEnemy : Enemy
                     mini.StartCoroutine(DespawnAfterTime(mini, miniLifespan));
                 }
             }
+        }
+    }
+    private void DetectNearbyDefender()
+    {
+        currentDefenderTarget = null;
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, reachRadius);
+        float closestDist = Mathf.Infinity;
+
+        foreach (var hit in hits)
+        {
+            if (hit.CompareTag("Defender"))
+            {
+                IDamageableDefender dmgDef = hit.GetComponent<IDamageableDefender>();
+                if (dmgDef != null)
+                {
+                    float dist = Vector3.Distance(transform.position, dmgDef.GetPosition());
+                    if (dist < closestDist)
+                    {
+                        closestDist = dist;
+                        currentDefenderTarget = dmgDef;
+                    }
+                }
+            }
+        }
+    }
+    private void AttackDefender()
+    {
+        if (currentDefenderTarget == null) return;
+
+        attackTimer += Time.deltaTime;
+        if (attackTimer >= attackRate)
+        {
+            currentDefenderTarget.ReceiveDamage(damage);
+            attackTimer = 0f;
         }
     }
 

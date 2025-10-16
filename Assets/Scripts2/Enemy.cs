@@ -21,7 +21,7 @@ public class Enemy : MonoBehaviour
     protected int currentIndex = 0;
 
     protected Tower towerTarget;
-    protected Defender currentDefenderTarget;
+    //protected Defender currentDefenderTarget;
     private ProceduralMap terrain; // terrain can remain private if not needed by subclasses
 
     [Header("UI")]
@@ -33,6 +33,8 @@ public class Enemy : MonoBehaviour
     protected Coroutine slowRoutine;
     protected Coroutine poisonRoutine;
     private bool initialized = false;
+    private DefenderBase currentDefenderBaseTarget;
+    private IDamageableDefender currentDefenderTarget;
     protected virtual void Start()
     {
         currentSpeed = baseSpeed;
@@ -118,28 +120,30 @@ public class Enemy : MonoBehaviour
     private void DetectNearbyDefender()
     {
         currentDefenderTarget = null;
+
         Collider[] hits = Physics.OverlapSphere(transform.position, reachRadius);
+        float closestDist = Mathf.Infinity;
+
         foreach (var hit in hits)
         {
-            // check modern DefenderBase first, then legacy Defender (if present)
-            DefenderBase db = hit.GetComponent<DefenderBase>();
-            if (db != null)
+            if (hit.CompareTag("Defender"))
             {
-                // convert to Defender so AttackDefender can call ReceiveDamage (we'll call base method via interface)
-                // keep Defender reference for legacy compatibility
-                currentDefenderTarget = hit.GetComponent<Defender>();
-                break;
-            }
-
-            Defender d = hit.GetComponent<Defender>();
-            if (d != null)
-            {
-                currentDefenderTarget = d;
-                break;
+                IDamageableDefender dmgDef = hit.GetComponent<IDamageableDefender>();
+                if (dmgDef != null)
+                {
+                    float dist = Vector3.Distance(transform.position, dmgDef.GetPosition());
+                    if (dist < closestDist)
+                    {
+                        closestDist = dist;
+                        currentDefenderTarget = dmgDef;
+                    }
+                }
             }
         }
     }
 
+
+    // --- UPDATED defender attack ---
     private void AttackDefender()
     {
         if (currentDefenderTarget == null) return;
@@ -147,21 +151,12 @@ public class Enemy : MonoBehaviour
         attackTimer += Time.deltaTime;
         if (attackTimer >= attackRate)
         {
-            // Try to call ReceiveDamage on DefenderBase first (if component exists)
-            DefenderBase baseDef = currentDefenderTarget.GetComponent<DefenderBase>();
-            if (baseDef != null)
-            {
-                baseDef.ReceiveDamage(damage);
-            }
-            else
-            {
-                // legacy Defender
-                currentDefenderTarget.ReceiveDamage(damage);
-            }
-
+            currentDefenderTarget.ReceiveDamage(damage);
             attackTimer = 0f;
         }
     }
+
+
 
     private void AttackTower()
     {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Defender : MonoBehaviour
+public class Defender : MonoBehaviour, IDamageableDefender
 {
     [Header("Stats")]
     public int maxHealth = 50;
@@ -73,7 +73,10 @@ public class Defender : MonoBehaviour
         }
         return closest;
     }
-
+    public Vector3 GetPosition()
+    {
+        return transform.position;
+    }
     public void ReceiveDamage(int dmg)
     {
         currentHealth -= dmg;
