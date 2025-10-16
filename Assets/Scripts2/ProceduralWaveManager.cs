@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.UI; // needed for Text
+using TMPro; // needed for TextMeshProUGUI
 using System.Collections;
+using System.Collections.Generic;
 
 public class ProceduralWaveManager : MonoBehaviour
 {
@@ -8,20 +10,20 @@ public class ProceduralWaveManager : MonoBehaviour
     public Spawner spawner;
     public Tower tower;
 
+    [Header("UI")]
+    public TextMeshProUGUI waveText; // assign this in the Inspector
+
     [Header("Wave Settings")]
     public int baseEnemiesPerWave = 5;
     public float baseSpawnInterval = 2.5f;
     public float waveDelay = 5f;
 
     [Header("Regulation Targets")]
-    [Tooltip("Ideal average wave duration (seconds).")]
     public float targetClearTime = 15f;
-
-    [Tooltip("Ideal tower health ratio (0–1). 1 = full health ideal.")]
     public float targetTowerHealth = 0.9f;
 
     [Header("Regulation Strengths")]
-    [Range(0f, 1f)] public float adjustmentSpeed = 0.2f; // how fast difficulty self-corrects
+    [Range(0f, 1f)] public float adjustmentSpeed = 0.2f;
     [Range(0.5f, 3f)] public float minDifficulty = 0.8f;
     [Range(0.5f, 3f)] public float maxDifficulty = 3f;
 
@@ -36,6 +38,7 @@ public class ProceduralWaveManager : MonoBehaviour
         if (spawner == null) spawner = FindObjectOfType<Spawner>();
         if (tower == null) tower = FindObjectOfType<Tower>();
 
+        UpdateWaveUI(); // initialize UI
         StartCoroutine(WaveLoop());
     }
 
@@ -53,6 +56,7 @@ public class ProceduralWaveManager : MonoBehaviour
             yield return new WaitForSeconds(waveDelay);
 
             currentWave++;
+            UpdateWaveUI(); // update UI every wave
             Debug.Log($"🌊 Wave {currentWave} starting. Difficulty = {currentDifficulty:F2}");
 
             waveStartTime = Time.time;
@@ -64,7 +68,6 @@ public class ProceduralWaveManager : MonoBehaviour
                 GetSpeedMult()
             ));
 
-            // Wait until all enemies are dead
             yield return new WaitUntil(() => activeEnemies.Count == 0);
 
             lastWaveTime = Time.time - waveStartTime;
@@ -72,6 +75,11 @@ public class ProceduralWaveManager : MonoBehaviour
         }
     }
 
+    void UpdateWaveUI()
+    {
+        if (waveText != null)
+            waveText.text = $"Wave: {currentWave}";
+    }
     IEnumerator SpawnWaveRoutine(int enemiesToSpawn, float spawnInterval, float healthMult, float damageMult, float speedMult)
     {
         for (int i = 0; i < enemiesToSpawn; i++)
@@ -112,7 +120,7 @@ public class ProceduralWaveManager : MonoBehaviour
         }
     }
 
-    // 🔁 Smart dynamic difficulty regulation
+    //  Smart dynamic difficulty regulation
     void RegulateDifficulty()
     {
         float towerHealthRatio = GetTowerHealthRatio();
