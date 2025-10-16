@@ -59,7 +59,7 @@ public class TankEnemy : Enemy
             }
         }
     }
-    private void AttackDefender()
+  /*  private void AttackDefender()
     {
         if (currentDefenderTarget == null) return;
 
@@ -69,8 +69,7 @@ public class TankEnemy : Enemy
             currentDefenderTarget.ReceiveDamage(damage);
             attackTimer = 0f;
         }
-    }
-
+    } */
     protected override void Update()
     {
         base.Update();
