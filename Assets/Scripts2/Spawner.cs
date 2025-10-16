@@ -18,7 +18,7 @@ public class Spawner : MonoBehaviour
     [Range(0f, 1f)] public float tankSpawnChance = 0.25f;
     [Range(0f, 1f)] public float splitterSpawnChance = 0.15f;
 
-    private int nextPathIndex = 0;
+    //private int nextPathIndex = 0;
 
     void Start()
     {
