@@ -991,7 +991,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -6361264500595097927, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
       propertyPath: damage
-      value: 15
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: -6361264500595097927, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
       propertyPath: healthSlider
@@ -2486,6 +2486,7 @@ GameObject:
   - component: {fileID: 772256111}
   - component: {fileID: 772256110}
   - component: {fileID: 772256109}
+  - component: {fileID: 772256113}
   m_Layer: 0
   m_Name: Terrain
   m_TagString: Untagged
@@ -2573,6 +2574,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &772256113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 772256108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53f2ed71e1e0638448f475cb41f47581, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  width: 80
+  length: 80
+  heightScale: 6
+  noiseScale: 0.08
+  numberOfPaths: 3
+  pathWidth: 3
+  pathResolution: 30
+  nodesPerPath: 4
+  nodeDistanceFromPath: 2.5
+  defenderNodePrefab: {fileID: 2044400662159651123, guid: 5ae0e3366249d3c4b8dd17a8f07ed935, type: 3}
+  miningNodePrefab: {fileID: 8911976638222822883, guid: 31bb86578c45ba145952bab8367a32f7, type: 3}
+  centerPoint: {x: 0, y: 0, z: 0}
+  spawnPoints: []
+  defenderNodes: []
+  miningNodes: []
 --- !u!1 &776309583
 GameObject:
   m_ObjectHideFlags: 0
@@ -3536,8 +3564,8 @@ MonoBehaviour:
   map: {fileID: 1128160463}
   tower: {fileID: 332533633}
   spawnInterval: 2.5
-  tankSpawnChance: 0.25
-  splitterSpawnChance: 0.15
+  tankSpawnChance: 0.363
+  splitterSpawnChance: 0.412
 --- !u!23 &1050480638
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4854,6 +4882,60 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1573773430}
   m_CullTransparentMesh: 1
+--- !u!1 &1626109320
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1626109322}
+  - component: {fileID: 1626109321}
+  m_Layer: 0
+  m_Name: WaveManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1626109321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1626109320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fc95bb6888c8b54a82eddb9908e59e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spawner: {fileID: 1050480637}
+  tower: {fileID: 332533633}
+  baseEnemiesPerWave: 5
+  baseSpawnInterval: 2.5
+  waveDelay: 5
+  targetClearTime: 15
+  targetTowerHealth: 0.9
+  adjustmentSpeed: 0.2
+  minDifficulty: 0.8
+  maxDifficulty: 3
+--- !u!4 &1626109322
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1626109320}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14.963514, y: -1.387073, z: 2.805637}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1648712636
 GameObject:
   m_ObjectHideFlags: 0
@@ -6420,3 +6502,4 @@ SceneRoots:
   - {fileID: 1104744101071533852}
   - {fileID: 1650935734}
   - {fileID: 826410418}
+  - {fileID: 1626109322}
