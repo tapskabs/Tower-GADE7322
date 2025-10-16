@@ -5,12 +5,12 @@ using UnityEngine;
 public class SplitterEnemy : Enemy
 {
     [Header("Splitter Enemy Settings")]
-    public GameObject miniEnemyPrefab;      // Prefab for the mini enemies
+    public GameObject miniEnemyPrefab;      
     public int splitCount = 2;              // How many minis spawn on death
     public float miniSpawnSpread = 1.5f;    // Random spawn offset
     public float miniLifespan = 8f;         // How long minis exist before despawning
-    public float miniDamageMultiplier = 0.5f; // Minis do half normal damage
-    public float miniSpeedMultiplier = 1.3f;  // Minis move slightly faster
+    public float miniDamageMultiplier = 0.5f; 
+    public float miniSpeedMultiplier = 1.3f;  
 
     private IDamageableDefender currentDefenderTarget;
 
@@ -21,7 +21,7 @@ public class SplitterEnemy : Enemy
         baseSpeed *= 1.2f;
     }
 
-    // --- Death Handling ---
+   
     protected override void Die()
     {
         StartCoroutine(SpawnAfterDelay());
@@ -34,7 +34,7 @@ public class SplitterEnemy : Enemy
         base.Die();
     }
 
-    // --- Spawn Minis ---
+   
     private void SpawnMiniEnemies()
     {
         if (miniEnemyPrefab == null || route == null || towerTarget == null)
@@ -51,7 +51,7 @@ public class SplitterEnemy : Enemy
 
             Vector3 spawnPos = transform.position + offset;
 
-            // Align Y with terrain
+           
             ProceduralMap map = FindObjectOfType<ProceduralMap>();
             if (map != null)
             {
@@ -80,7 +80,7 @@ public class SplitterEnemy : Enemy
         }
     }
 
-    // --- Helper: Find Closest Route Point ---
+   
     private Vector3 GetClosestPointOnRoute(IEnumerable<Vector3> routePoints, Vector3 fromPos)
     {
         if (routePoints == null) return fromPos;
@@ -106,17 +106,17 @@ public class SplitterEnemy : Enemy
         return closest;
     }
 
-    // --- Despawn Mini after timer ---
+    // Despawn Mini after timer 
     private IEnumerator DespawnAfterTime(Enemy e, float time)
     {
         yield return new WaitForSeconds(time);
         if (e != null)
         {
-            e.ReceiveDamage(e.maxHealth); // kills mini cleanly
+            e.ReceiveDamage(e.maxHealth); // kills mini 
         }
     }
 
-    // --- Defender Detection & Attack ---
+    //Defender Detection & Attack 
     private void DetectNearbyDefender()
     {
         currentDefenderTarget = null;
@@ -153,7 +153,7 @@ public class SplitterEnemy : Enemy
         }
     }
 
-    // --- Update keeps health bar aligned ---
+    //Update keeps health bar aligned
     protected override void Update()
     {
         base.Update();
