@@ -36,50 +36,61 @@ public class SplitMiniEnemy : Enemy
 
     protected override void Update()
     {
-        base.Update();
+        base.Update(); // keep movement and other logic from Enemy
 
         attackTimer += Time.deltaTime;
 
-        // Try to attack any defender within range while moving
-        if (attackTimer >= attackInterval)
-        {
-            Defender target = FindClosestDefender();
-            if (target != null)
-            {
-                int dealtDamage = Mathf.RoundToInt(damage * damageMultiplier);
-                target.ReceiveDamage(dealtDamage);
-            }
+        // Detect defenders in range
+        DetectNearbyDefender();
 
+        if (currentDefenderTarget != null && attackTimer >= attackInterval)
+        {
+            AttackDefender();
             attackTimer = 0f;
         }
-
-        // Keep health bar following
-        if (healthBar != null)
-        {
-            Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
-            healthBar.transform.position = screenPos;
-        }
     }
 
-    private Defender FindClosestDefender()
+    // Detect any defender (DefenderBase or legacy Defender) within attackRange
+    private void DetectNearbyDefender()
     {
-        Defender[] defenders = GameObject.FindObjectsOfType<Defender>();
-        Defender closest = null;
-        float minDist = Mathf.Infinity;
-
-        foreach (Defender d in defenders)
+        currentDefenderTarget = null;
+        Collider[] hits = Physics.OverlapSphere(transform.position, attackRange);
+        foreach (var hit in hits)
         {
-            float dist = Vector3.Distance(transform.position, d.transform.position);
-            if (dist < minDist && dist <= attackRange)
+            DefenderBase db = hit.GetComponent<DefenderBase>();
+            if (db != null)
             {
-                minDist = dist;
-                closest = d;
+                currentDefenderTarget = hit.GetComponent<Defender>(); // keep legacy reference
+                break;
+            }
+
+            Defender d = hit.GetComponent<Defender>();
+            if (d != null)
+            {
+                currentDefenderTarget = d;
+                break;
             }
         }
-
-        return closest;
     }
 
+    // Attack the detected defender
+    private void AttackDefender()
+    {
+        if (currentDefenderTarget == null) return;
 
+        int dealtDamage = Mathf.RoundToInt(damage * damageMultiplier);
+
+        // Prefer DefenderBase (supports Slow/Poison)
+        DefenderBase baseDef = currentDefenderTarget.GetComponent<DefenderBase>();
+        if (baseDef != null)
+        {
+            baseDef.ReceiveDamage(dealtDamage);
+        }
+        else
+        {
+            // Legacy Defender fallback
+            currentDefenderTarget.ReceiveDamage(dealtDamage);
+        }
+    }
 
 }
