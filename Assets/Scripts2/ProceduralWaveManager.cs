@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.UI; // needed for Text
-using TMPro; // needed for TextMeshProUGUI
+using UnityEngine.UI; 
+using TMPro; 
 using System.Collections;
 using System.Collections.Generic;
 
@@ -11,7 +11,7 @@ public class ProceduralWaveManager : MonoBehaviour
     public Tower tower;
 
     [Header("UI")]
-    public TextMeshProUGUI waveText; // assign this in the Inspector
+    public TextMeshProUGUI waveText; 
 
     [Header("Wave Settings")]
     public int baseEnemiesPerWave = 5;
@@ -38,7 +38,7 @@ public class ProceduralWaveManager : MonoBehaviour
         if (spawner == null) spawner = FindObjectOfType<Spawner>();
         if (tower == null) tower = FindObjectOfType<Tower>();
 
-        UpdateWaveUI(); // initialize UI
+        UpdateWaveUI(); 
         StartCoroutine(WaveLoop());
     }
 
@@ -56,7 +56,7 @@ public class ProceduralWaveManager : MonoBehaviour
             yield return new WaitForSeconds(waveDelay);
 
             currentWave++;
-            UpdateWaveUI(); // update UI every wave
+            UpdateWaveUI(); 
             Debug.Log($"🌊 Wave {currentWave} starting. Difficulty = {currentDifficulty:F2}");
 
             waveStartTime = Time.time;
@@ -105,7 +105,7 @@ public class ProceduralWaveManager : MonoBehaviour
                 }
                 catch { }
 
-                // ✅ Do NOT call InitRoute here — spawner already handles route & movement
+              
                 activeEnemies.Add(e);
             }
 
@@ -120,7 +120,7 @@ public class ProceduralWaveManager : MonoBehaviour
         }
     }
 
-    //  Smart dynamic difficulty regulation
+    //Smart dynamic difficulty regulation
     void RegulateDifficulty()
     {
         float towerHealthRatio = GetTowerHealthRatio();
@@ -129,7 +129,7 @@ public class ProceduralWaveManager : MonoBehaviour
         // Combine clear speed + tower health
         float performanceScore = (clearTimeFactor * 0.6f) + (towerHealthRatio / targetTowerHealth * 0.4f);
 
-        // Player overperforms -> increase difficulty, underperforms -> decrease
+        // Player overperforms: increase difficulty, underperforms: decrease in difficulty
         float error = performanceScore - 1f;
 
         currentDifficulty += error * adjustmentSpeed;
