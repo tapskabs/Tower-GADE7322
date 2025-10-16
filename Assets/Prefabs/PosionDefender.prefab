@@ -121,9 +121,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8a2708b0aca9074fb05e80203cde395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHealth: 50
   attackRange: 5
   attackRate: 1
   attackDamage: 10
+  healthBarPrefab: {fileID: 5283748656744593292, guid: 0f29e7a60d3d94248ac55eaa2aca54cd, type: 3}
   poisonDamage: 2
   poisonDuration: 5
   tickRate: 1

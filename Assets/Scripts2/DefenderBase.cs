@@ -6,13 +6,12 @@ public abstract class DefenderBase : MonoBehaviour
     public int maxHealth = 50;
     protected int currentHealth;
 
-    [Header("Attack")]
-    public float attackRange = 5f;
-    public float attackRate = 1f;
+    [Header("Combat")]
+    public float attackRange = 8f;
+    public float attackRate = 1.2f;
     public int attackDamage = 10;
-
-    protected float attackTimer;
-    protected Transform targetEnemy;
+    protected float attackTimer = 0f;
+    protected Enemy targetEnemy;
 
     [Header("UI")]
     public GameObject healthBarPrefab;
@@ -22,30 +21,32 @@ public abstract class DefenderBase : MonoBehaviour
     {
         currentHealth = maxHealth;
 
-        // Spawn health bar
+        // Spawn a floating healthbar
         if (healthBarPrefab != null)
         {
             GameObject hb = Instantiate(healthBarPrefab, transform.position + Vector3.up * 2f, Quaternion.identity);
             hb.transform.SetParent(GameObject.Find("Canvas").transform, false);
             healthBar = hb.GetComponent<EnemyHealthBar>();
-            healthBar?.SetHealth(currentHealth, maxHealth);
+            if (healthBar != null)
+                healthBar.SetHealth(currentHealth, maxHealth);
         }
     }
 
     protected virtual void Update()
     {
-        attackTimer -= Time.deltaTime;
+        attackTimer += Time.deltaTime;
 
-        if (targetEnemy == null)
-            FindTarget();
-
-        if (targetEnemy != null && attackTimer <= 0f)
+        if (attackTimer >= attackRate)
         {
-            Attack();
-            attackTimer = 1f / attackRate;
+            targetEnemy = FindClosestEnemy();
+            if (targetEnemy != null)
+            {
+                Attack();
+                attackTimer = 0f;
+            }
         }
 
-        // Update health bar position
+        // Keep healthbar above defender
         if (healthBar != null)
         {
             Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2f);
@@ -53,38 +54,39 @@ public abstract class DefenderBase : MonoBehaviour
         }
     }
 
-    protected void FindTarget()
+    protected abstract void Attack();
+
+    protected Enemy FindClosestEnemy()
     {
-        Enemy[] enemies = FindObjectsOfType<Enemy>();
-        float closest = Mathf.Infinity;
-        Transform nearest = null;
+        Enemy[] enemies = GameObject.FindObjectsOfType<Enemy>();
+        Enemy closest = null;
+        float minDist = Mathf.Infinity;
 
         foreach (Enemy e in enemies)
         {
-            float dist = Vector3.Distance(transform.position, e.transform.position);
-            if (dist < closest && dist <= attackRange)
+            float d = Vector3.Distance(transform.position, e.transform.position);
+            if (d < minDist && d <= attackRange)
             {
-                closest = dist;
-                nearest = e.transform;
+                minDist = d;
+                closest = e;
             }
         }
-
-        targetEnemy = nearest;
+        return closest;
     }
 
-    // ✅ New: defenders can take damage
     public virtual void ReceiveDamage(int dmg)
     {
         currentHealth -= dmg;
-        healthBar?.SetHealth(currentHealth, maxHealth);
+
+        if (healthBar != null)
+            healthBar.SetHealth(currentHealth, maxHealth);
 
         if (currentHealth <= 0)
         {
             if (healthBar != null)
                 Destroy(healthBar.gameObject);
+
             Destroy(gameObject);
         }
     }
-
-    protected abstract void Attack();
 }
