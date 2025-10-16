@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public float moveSpeed = 10f;   // movement speed
-    public float fastMultiplier = 2f; // hold shift to move faster
-    public float zoomSpeed = 200f; // scrollwheel zoom speed
-    public float minY = 10f; // minimum zoom height
-    public float maxY = 60f; // maximum zoom height
+    public float moveSpeed = 10f;   
+    public float fastMultiplier = 2f; 
+    public float zoomSpeed = 200f; 
+    public float minY = 10f; 
+    public float maxY = 60f;
 
     void Update()
     {
