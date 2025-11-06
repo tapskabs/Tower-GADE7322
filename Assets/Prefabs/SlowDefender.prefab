@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7161886621758265916}
   - component: {fileID: 3688959911056673869}
   - component: {fileID: 2011951841749001297}
+  - component: {fileID: -384856792983928862}
   m_Layer: 0
   m_Name: SlowDefender
   m_TagString: Defender
@@ -122,9 +123,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 50
+  currentHealth: 0
   attackRange: 5
   attackRate: 1
   attackDamage: 10
   healthBarPrefab: {fileID: 5283748656744593292, guid: 0f29e7a60d3d94248ac55eaa2aca54cd, type: 3}
   slowDuration: 2
   slowFactor: 0.5
+--- !u!114 &-384856792983928862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2044400662159651123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8556f7e4723bacf458cd52d623fa9623, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  upgradeLevel: 0
+  maxUpgradeLevel: 2
+  upgradeCosts: 3200000064000000
+  healthMultipliers:
+  - 1.2
+  - 1.5
+  attackRateMultipliers:
+  - 0.9
+  - 0.75
+  damageMultipliers:
+  - 1.3
+  - 1.6
+  upgradeMaterials: []

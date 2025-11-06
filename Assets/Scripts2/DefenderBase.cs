@@ -4,7 +4,7 @@ public abstract class DefenderBase : MonoBehaviour
 {
     [Header("Stats")]
     public int maxHealth = 50;
-    protected int currentHealth;
+    public int currentHealth;
 
     [Header("Combat")]
     public float attackRange = 8f;
