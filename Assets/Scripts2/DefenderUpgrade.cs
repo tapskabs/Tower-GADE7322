@@ -15,68 +15,70 @@ public class DefenderUpgrade : MonoBehaviour
     public Material[] upgradeMaterials;
     private Renderer rend;
 
+    // These references will handle either system
     private DefenderBase defenderBase;
+    private Defender legacyDefender;
     private GameManager gameManager;
 
     void Start()
     {
-        // Try to get DefenderBase (main inheritance root)
         defenderBase = GetComponent<DefenderBase>();
-
-        //  Safety net: if not found, try parent or derived types
-        if (defenderBase == null)
-        {
-            defenderBase = GetComponentInParent<DefenderBase>();
-        }
-
+        legacyDefender = GetComponent<Defender>();
         rend = GetComponentInChildren<Renderer>();
         gameManager = GameManager.Instance;
 
-        if (defenderBase == null)
-            Debug.LogError($" No DefenderBase found on {gameObject.name}");
+        if (defenderBase == null && legacyDefender == null)
+            Debug.LogError($"No DefenderBase or Defender component found on {gameObject.name}");
     }
 
     public void Upgrade()
     {
-        if (defenderBase == null)
-        {
-            Debug.LogError(" Cannot upgrade — defenderBase reference missing!");
-            return;
-        }
-
         if (upgradeLevel >= maxUpgradeLevel)
         {
-            Debug.Log("Already at max upgrade.");
+            Debug.Log("Already at maximum upgrade level.");
             return;
         }
 
         if (gameManager == null)
         {
-            Debug.LogError("GameManager not found!");
+            Debug.LogError("Upgrade failed: GameManager instance missing.");
             return;
         }
 
         int cost = upgradeCosts[upgradeLevel];
-        if (gameManager.CurrentResources >= cost)
+        if (gameManager.CurrentResources < cost)
         {
-            gameManager.SpendResources(cost);
-            upgradeLevel++;
+            Debug.Log("Not enough resources to upgrade.");
+            return;
+        }
 
-            //  Apply stat boosts
+        // Spend resources first
+        gameManager.SpendResources(cost);
+        upgradeLevel++;
+
+        // Handle DefenderBase version
+        if (defenderBase != null)
+        {
             defenderBase.maxHealth = Mathf.RoundToInt(defenderBase.maxHealth * healthMultipliers[upgradeLevel - 1]);
             defenderBase.attackDamage = Mathf.RoundToInt(defenderBase.attackDamage * damageMultipliers[upgradeLevel - 1]);
             defenderBase.attackRate *= attackRateMultipliers[upgradeLevel - 1];
             defenderBase.currentHealth = defenderBase.maxHealth;
-
-            //  Change material
-            if (rend != null && upgradeMaterials.Length >= upgradeLevel)
-                rend.material = upgradeMaterials[upgradeLevel - 1];
-
-            Debug.Log($"{gameObject.name} upgraded to level {upgradeLevel}");
         }
-        else
+
+        // Handle Legacy Defender version
+        else if (legacyDefender != null)
         {
-            Debug.Log("Not enough resources to upgrade!");
+            legacyDefender.maxHealth = Mathf.RoundToInt(legacyDefender.maxHealth * healthMultipliers[upgradeLevel - 1]);
+            legacyDefender.damage = Mathf.RoundToInt(legacyDefender.damage * damageMultipliers[upgradeLevel - 1]);
+            legacyDefender.attackRate *= attackRateMultipliers[upgradeLevel - 1];
         }
+
+        // Change appearance
+        if (rend != null && upgradeMaterials.Length >= upgradeLevel)
+        {
+            rend.material = upgradeMaterials[upgradeLevel - 1];
+        }
+
+        Debug.Log($"{gameObject.name} upgraded to level {upgradeLevel}");
     }
 }
