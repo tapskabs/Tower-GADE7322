@@ -4,6 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralMap : MonoBehaviour
 {
+
     [Header("Map Size")]
     public int width = 80;
     public int length = 80;
@@ -23,6 +24,18 @@ public class ProceduralMap : MonoBehaviour
     public GameObject defenderNodePrefab;
     public GameObject miningNodePrefab;
 
+    [Header("Vertex Colors")]
+    [Tooltip("Color at lowest elevation")]
+    public Color lowColor = new Color(0.12f, 0.4f, 0.12f);
+    [Tooltip("Color at mid elevation")]
+    public Color midColor = new Color(0.45f, 0.35f, 0.2f);
+    [Tooltip("Color at highest elevation (snow/rock)")]
+    public Color highColor = new Color(0.85f, 0.85f, 0.85f);
+    [Tooltip("How quickly colors transition with height (0..1)")]
+    [Range(0.01f, 1f)] public float heightBlend = 0.5f;
+    [Tooltip("Slope threshold (dot(normal, up)) below which we show rock color")]
+    [Range(0f, 1f)] public float slopeThreshold = 0.7f;
+
     [HideInInspector] public Vector3 centerPoint;
     [HideInInspector] public List<List<Vector3>> paths = new List<List<Vector3>>();
     [HideInInspector] public List<Vector3> spawnPoints = new List<Vector3>();
@@ -32,37 +45,58 @@ public class ProceduralMap : MonoBehaviour
     private Mesh mesh;
     private Vector3[] vertices;
     private int[] triangles;
+    private Color[] colors;
+    private Vector3[] normals; // cache for slope calculation
+
+    private MeshFilter meshFilter;
+    private MeshRenderer meshRenderer;
+
+    void Awake()
+    {
+        meshFilter = GetComponent<MeshFilter>();
+        meshRenderer = GetComponent<MeshRenderer>();
+    }
 
     void Start()
     {
         Generate();
     }
 
+    [ContextMenu("Generate Map")]
     public void Generate()
     {
         centerPoint = new Vector3(width * 0.5f, 0f, length * 0.5f);
+
         BuildBaseMesh();
         CreatePaths();
-        ApplyMesh();
+        ApplyMesh(); // sets vertices/triangles/normals/colors onto the mesh
     }
 
-    // --- IMPROVED: Fractal noise-based terrain generation ---
+    // --- Build base grid mesh with FBM/perlin noise ---
     void BuildBaseMesh()
     {
         mesh = new Mesh();
+        mesh.name = "ProceduralTerrainMesh";
+
         vertices = new Vector3[(width + 1) * (length + 1)];
         triangles = new int[width * length * 6];
+        colors = new Color[vertices.Length];
 
-        for (int i = 0, z = 0; z <= length; z++)
+        int i = 0;
+        for (int z = 0; z <= length; z++)
         {
             for (int x = 0; x <= width; x++)
             {
-                float y = FractalNoise(x + Time.time * 0.2f, z + Time.time * 0.2f, noiseOctaves, persistence);
+                // time offsets provide subtle animated variation if desired
+                float sampleX = (x + 1000f) * noiseScale; // offset to avoid artefacts near 0
+                float sampleZ = (z + 1000f) * noiseScale;
+                float y = FractalNoise(sampleX, sampleZ, noiseOctaves, persistence) * heightScale;
                 vertices[i] = new Vector3(x, y, z);
                 i++;
             }
         }
 
+        // triangles (same as before)
         int vert = 0, tri = 0;
         for (int z = 0; z < length; z++)
         {
@@ -80,27 +114,38 @@ public class ProceduralMap : MonoBehaviour
             }
             vert++;
         }
+
+        // temporary normals for slope-based colors (recalc after triangles assigned)
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.RecalculateNormals();
+        normals = mesh.normals; // initial normals
     }
 
-    // --- NEW: Multi-octave (fractal) noise function for richer terrain ---
+    // --- Multi-octave fractal noise (FBM) ---
     float FractalNoise(float x, float z, int octaves, float persistence)
     {
         float total = 0f;
-        float frequency = noiseScale;
+        float frequency = 1f;
         float amplitude = 1f;
         float maxValue = 0f;
 
         for (int i = 0; i < octaves; i++)
         {
-            total += Mathf.PerlinNoise(x * frequency, z * frequency) * amplitude;
+            float sampleX = x * frequency;
+            float sampleZ = z * frequency;
+            float perlin = Mathf.PerlinNoise(sampleX, sampleZ);
+            total += perlin * amplitude;
             maxValue += amplitude;
+
             amplitude *= persistence;
             frequency *= 2f;
         }
 
-        return (total / maxValue) * heightScale;
+        return (total / maxValue); // normalized 0..1, multiply heightScale when used
     }
 
+    // --- Creates radial-ish paths and generates nodes similarly to your original ---
     void CreatePaths()
     {
         paths.Clear();
@@ -122,7 +167,7 @@ public class ProceduralMap : MonoBehaviour
             for (int i = 0; i <= pathResolution; i++)
             {
                 float t = (float)i / pathResolution;
-                float s = t * t * (3f - 2f * t);
+                float s = t * t * (3f - 2f * t); // smoothstep
                 Vector3 point = Vector3.Lerp(anchor, centerPoint, s);
                 Vector3 perp = Vector3.Cross(Vector3.up, (centerPoint - anchor).normalized);
                 float jitter = Mathf.PerlinNoise(p * 10 + i * 0.1f, Time.time * 0.1f) - 0.5f;
@@ -136,6 +181,7 @@ public class ProceduralMap : MonoBehaviour
             spawnPoints.Add(anchor);
 
             CarvePathIntoHeightmap(smoothedPath);
+
             GenerateNodesNearPath(smoothedPath, nodesPerPath, nodeDistanceFromPath);
         }
     }
@@ -164,7 +210,7 @@ public class ProceduralMap : MonoBehaviour
         return smoothed;
     }
 
-    // --- IMPROVED: Smooth falloff-based path carving ---
+    // --- Smooth falloff-based path carving (cosine falloff) ---
     void CarvePathIntoHeightmap(List<Vector3> singlePath)
     {
         float half = pathWidth * 0.5f;
@@ -190,9 +236,8 @@ public class ProceduralMap : MonoBehaviour
             {
                 float targetY = closest.y;
                 float t = Mathf.Clamp01(minDist / half);
-                // smoother falloff curve
-                float falloff = Mathf.Cos(t * Mathf.PI) * 0.5f + 0.5f;
-                vertices[vi].y = Mathf.Lerp(v.y, targetY, falloff);
+                float falloff = Mathf.Cos(t * Mathf.PI) * 0.5f + 0.5f; // smoother than linear
+                vertices[vi].y = Mathf.Lerp(vertices[vi].y, targetY, falloff);
             }
         }
     }
@@ -249,15 +294,55 @@ public class ProceduralMap : MonoBehaviour
         );
     }
 
+    // --- Writes vertex data to mesh, computes normals and vertex colors ---
     void ApplyMesh()
     {
+        // ensure mesh exists
+        if (mesh == null) mesh = new Mesh();
+        mesh.Clear();
+
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
-        GetComponent<MeshFilter>().mesh = mesh;
+
+        normals = mesh.normals; // fresh normals after final vertex positions
+
+        // compute vertex colors using height + slope
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            float height01 = Mathf.InverseLerp(0f, heightScale, vertices[i].y);
+            float slopeDot = Vector3.Dot(normals[i], Vector3.up); // 1 = flat, 0 = vertical
+            // slope factor: steep => show rock/highColor; flat => show blended grass/mid
+            float slopeFactor = Mathf.Clamp01(1f - slopeDot); // 0 => flat, 1 => vertical
+            Color slopeColor = Color.Lerp(midColor, highColor, slopeFactor);
+
+            // Blend by height first between low-mid-high
+            Color heightColor;
+            if (height01 < 0.5f)
+            {
+                float t = Mathf.InverseLerp(0f, 0.5f, height01);
+                heightColor = Color.Lerp(lowColor, midColor, Mathf.Pow(t, heightBlend * 2f));
+            }
+            else
+            {
+                float t = Mathf.InverseLerp(0.5f, 1f, height01);
+                heightColor = Color.Lerp(midColor, highColor, Mathf.Pow(t, heightBlend * 2f));
+            }
+
+            // mix height color with slope color (so steep faces look rockier)
+            float slopeMix = Mathf.SmoothStep(0f, 1f, slopeFactor / (1f - slopeThreshold + 0.0001f));
+            colors[i] = Color.Lerp(heightColor, slopeColor, slopeMix);
+        }
+
+        mesh.colors = colors;
+
+        meshFilter.mesh = mesh;
+        // keep local copy to avoid GC churn
+        this.mesh = mesh;
     }
 
+    // Optional: find an average end-of-path point for tower spawn
     public Vector3 GetTowerSpawnPoint()
     {
         if (paths == null || paths.Count == 0) return centerPoint;
@@ -313,4 +398,5 @@ public class ProceduralMap : MonoBehaviour
         }
     }
 #endif
+
 }
