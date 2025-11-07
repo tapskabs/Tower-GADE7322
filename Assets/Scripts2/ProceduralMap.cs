@@ -8,20 +8,21 @@ public class ProceduralMap : MonoBehaviour
     public int width = 80;
     public int length = 80;
     public float heightScale = 6f;
-    public float noiseScale = 0.08f;
+    [Range(0.001f, 0.5f)] public float noiseScale = 0.08f;
+    [Range(1, 8)] public int noiseOctaves = 4;
+    [Range(0.1f, 1f)] public float persistence = 0.5f;
 
     [Header("Paths")]
-    public int numberOfPaths = 3;       
-    public float pathWidth = 3f;        
-    public int pathResolution = 30;     
+    public int numberOfPaths = 3;
+    public float pathWidth = 3f;
+    public int pathResolution = 30;
 
     [Header("Placement Nodes")]
-    public int nodesPerPath = 4;             
+    public int nodesPerPath = 4;
     public float nodeDistanceFromPath = 2.5f;
-    public GameObject defenderNodePrefab;    
-    public GameObject miningNodePrefab;      
+    public GameObject defenderNodePrefab;
+    public GameObject miningNodePrefab;
 
-   
     [HideInInspector] public Vector3 centerPoint;
     [HideInInspector] public List<List<Vector3>> paths = new List<List<Vector3>>();
     [HideInInspector] public List<Vector3> spawnPoints = new List<Vector3>();
@@ -45,7 +46,7 @@ public class ProceduralMap : MonoBehaviour
         ApplyMesh();
     }
 
-  
+    // --- IMPROVED: Fractal noise-based terrain generation ---
     void BuildBaseMesh()
     {
         mesh = new Mesh();
@@ -56,8 +57,7 @@ public class ProceduralMap : MonoBehaviour
         {
             for (int x = 0; x <= width; x++)
             {
-                float y = Mathf.PerlinNoise((x + Time.time) * noiseScale,
-                                            (z + Time.time * 2f) * noiseScale) * heightScale;
+                float y = FractalNoise(x + Time.time * 0.2f, z + Time.time * 0.2f, noiseOctaves, persistence);
                 vertices[i] = new Vector3(x, y, z);
                 i++;
             }
@@ -82,7 +82,25 @@ public class ProceduralMap : MonoBehaviour
         }
     }
 
-    
+    // --- NEW: Multi-octave (fractal) noise function for richer terrain ---
+    float FractalNoise(float x, float z, int octaves, float persistence)
+    {
+        float total = 0f;
+        float frequency = noiseScale;
+        float amplitude = 1f;
+        float maxValue = 0f;
+
+        for (int i = 0; i < octaves; i++)
+        {
+            total += Mathf.PerlinNoise(x * frequency, z * frequency) * amplitude;
+            maxValue += amplitude;
+            amplitude *= persistence;
+            frequency *= 2f;
+        }
+
+        return (total / maxValue) * heightScale;
+    }
+
     void CreatePaths()
     {
         paths.Clear();
@@ -100,12 +118,11 @@ public class ProceduralMap : MonoBehaviour
             anchor.z = Mathf.Clamp(anchor.z, 1f, length - 1f);
             anchor.y = GetHeightAt(anchor.x, anchor.z);
 
-          
             List<Vector3> rawPath = new List<Vector3>();
             for (int i = 0; i <= pathResolution; i++)
             {
                 float t = (float)i / pathResolution;
-                float s = t * t * (3f - 2f * t); // smoothstep
+                float s = t * t * (3f - 2f * t);
                 Vector3 point = Vector3.Lerp(anchor, centerPoint, s);
                 Vector3 perp = Vector3.Cross(Vector3.up, (centerPoint - anchor).normalized);
                 float jitter = Mathf.PerlinNoise(p * 10 + i * 0.1f, Time.time * 0.1f) - 0.5f;
@@ -118,15 +135,11 @@ public class ProceduralMap : MonoBehaviour
             paths.Add(smoothedPath);
             spawnPoints.Add(anchor);
 
-           
             CarvePathIntoHeightmap(smoothedPath);
-
-           
             GenerateNodesNearPath(smoothedPath, nodesPerPath, nodeDistanceFromPath);
         }
     }
 
-   
     List<Vector3> SmoothPath(List<Vector3> rawPoints, int smoothFactor)
     {
         List<Vector3> smoothed = new List<Vector3>();
@@ -151,7 +164,7 @@ public class ProceduralMap : MonoBehaviour
         return smoothed;
     }
 
-   
+    // --- IMPROVED: Smooth falloff-based path carving ---
     void CarvePathIntoHeightmap(List<Vector3> singlePath)
     {
         float half = pathWidth * 0.5f;
@@ -176,13 +189,14 @@ public class ProceduralMap : MonoBehaviour
             if (minDist <= half)
             {
                 float targetY = closest.y;
-                float t = 1f - (minDist / half);
-                vertices[vi].y = Mathf.Lerp(v.y, targetY, t);
+                float t = Mathf.Clamp01(minDist / half);
+                // smoother falloff curve
+                float falloff = Mathf.Cos(t * Mathf.PI) * 0.5f + 0.5f;
+                vertices[vi].y = Mathf.Lerp(v.y, targetY, falloff);
             }
         }
     }
 
-   
     void GenerateNodesNearPath(List<Vector3> pathList, int count, float distanceFromPath)
     {
         if (pathList == null || pathList.Count == 0) return;
@@ -200,7 +214,6 @@ public class ProceduralMap : MonoBehaviour
             Vector3 nodePos = p + perp * side * distanceFromPath;
             nodePos.y = GetHeightAt(nodePos.x, nodePos.z) + 0.1f;
 
-            
             if (Random.value > 0.5f && defenderNodePrefab != null)
             {
                 GameObject go = Instantiate(defenderNodePrefab, nodePos, Quaternion.identity, transform);
@@ -216,7 +229,6 @@ public class ProceduralMap : MonoBehaviour
         }
     }
 
-    
     public float GetHeightAt(float x, float z)
     {
         int xi = Mathf.Clamp(Mathf.RoundToInt(x), 0, width);
@@ -246,7 +258,6 @@ public class ProceduralMap : MonoBehaviour
         GetComponent<MeshFilter>().mesh = mesh;
     }
 
-    
     public Vector3 GetTowerSpawnPoint()
     {
         if (paths == null || paths.Count == 0) return centerPoint;
@@ -276,9 +287,7 @@ public class ProceduralMap : MonoBehaviour
             foreach (var path in paths)
             {
                 for (int i = 0; i < path.Count - 1; i++)
-                {
                     Gizmos.DrawLine(path[i], path[i + 1]);
-                }
             }
         }
 
