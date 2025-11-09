@@ -49,13 +49,13 @@ public class PlacementManager : MonoBehaviour
             return;
         }
 
-        if (map.defenderNodes != null && map.defenderNodes.Count > 0)
+        if (map.defenderNodes != null)
         {
             foreach (var dn in map.defenderNodes)
                 if (dn != null) nodes.Add(dn.GetComponent<BuildNode>());
         }
 
-        if (map.miningNodes != null && map.miningNodes.Count > 0)
+        if (map.miningNodes != null)
         {
             foreach (var mn in map.miningNodes)
                 if (mn != null) nodes.Add(mn.GetComponent<BuildNode>());
@@ -71,7 +71,6 @@ public class PlacementManager : MonoBehaviour
             TryPlaceOnNode();
         }
 
-        // Right-click cancels placement
         if (Input.GetMouseButtonDown(1))
         {
             ResetBuildMode();
@@ -107,16 +106,37 @@ public class PlacementManager : MonoBehaviour
 
     void TryPlaceStructure(BuildNode node, GameObject prefab, int cost)
     {
-        if (GameManager.Instance.CurrentResources >= cost)
-        {
-            node.PlaceStructure(prefab);
-            GameManager.Instance.SpendResources(cost);
-            UpdateResourceText();
-            ResetBuildMode();
-        }
-        else
+        if (GameManager.Instance.CurrentResources < cost)
         {
             Debug.Log("Not enough resources.");
+            return;
+        }
+
+        // Place structure on the node
+        GameObject placed = node.PlaceStructure(prefab);
+
+        if (placed == null)
+        {
+            Debug.LogWarning("Placement failed: prefab not instantiated.");
+            return;
+        }
+
+        GameManager.Instance.SpendResources(cost);
+        UpdateResourceText();
+        ResetBuildMode();
+
+        // --- Tower fusion & upgrades ---
+        ProceduralTower p = placed.GetComponentInChildren<ProceduralTower>();
+        if (p != null)
+        {
+            // Ensure tower has a profile
+            if (p.GetProfile() == null) p.GenerateRandomProfile();
+
+            // Notify fusion manager (does NOT assign void to variable)
+            TowerFusionManager.Instance?.OnTowerPlaced(p);
+
+            // Optional: preserve tower upgrades if you have an UpgradeManager
+            // UpgradeManager.Instance?.InitializeUpgrades(p);
         }
     }
 
@@ -177,16 +197,12 @@ public class PlacementManager : MonoBehaviour
     {
         if (defenderButton != null)
             defenderButton.interactable = (currentMode != BuildMode.Defender);
-
         if (mineButton != null)
             mineButton.interactable = (currentMode != BuildMode.Mine);
-
         if (slowDefenderButton != null)
             slowDefenderButton.interactable = (currentMode != BuildMode.SlowDefender);
-
         if (poisonDefenderButton != null)
             poisonDefenderButton.interactable = (currentMode != BuildMode.PoisonDefender);
-
         if (cancelButton != null)
             cancelButton.interactable = (currentMode != BuildMode.None);
     }

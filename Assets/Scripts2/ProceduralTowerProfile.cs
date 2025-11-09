@@ -2,7 +2,7 @@ using UnityEngine;
 
 [System.Serializable]
 
-public class ProceduralTowerProfile : MonoBehaviour
+public class ProceduralTowerProfile 
 {
     [Header("Identity")]
     public string seedName = "Variant";
