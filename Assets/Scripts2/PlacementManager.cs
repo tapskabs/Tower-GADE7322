@@ -132,8 +132,8 @@ public class PlacementManager : MonoBehaviour
             // Ensure tower has a profile
             if (p.GetProfile() == null) p.GenerateRandomProfile();
 
-            // Notify fusion manager (does NOT assign void to variable)
-            TowerFusionManager.Instance?.OnTowerPlaced(p);
+            // **FIXED**: register tower instead of calling non-existent OnTowerPlaced
+            TowerFusionManager.Instance?.RegisterTower(p.GetComponent<Tower>());
 
             // Optional: preserve tower upgrades if you have an UpgradeManager
             // UpgradeManager.Instance?.InitializeUpgrades(p);

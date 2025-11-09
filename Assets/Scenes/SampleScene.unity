@@ -2801,6 +2801,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 492520416}
   m_CullTransparentMesh: 1
+--- !u!1 &515481054
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 515481055}
+  m_Layer: 0
+  m_Name: AutoSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &515481055
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 515481054}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 40.40118, y: 3.2803264, z: 41.337864}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &592083428
 GameObject:
   m_ObjectHideFlags: 0
@@ -6406,7 +6437,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1789342360}
-  - component: {fileID: 1789342359}
+  - component: {fileID: 1789342361}
   m_Layer: 0
   m_Name: Fushion
   m_TagString: Untagged
@@ -6414,24 +6445,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1789342359
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1789342358}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5bebe5c33c6daab44acaf1db13e1c7f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  fusionRadius: 4
-  fusionChance: 0.9
-  maxNeighborsConsidered: 4
-  autoFuseOnPlacement: 1
-  fusionParticlePrefab: {fileID: 0}
-  fusionPulseDuration: 1.2
 --- !u!4 &1789342360
 Transform:
   m_ObjectHideFlags: 0
@@ -6447,6 +6460,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1789342361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1789342358}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bebe5c33c6daab44acaf1db13e1c7f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fusionRadius: 4
+  fusionChance: 0.9
+  maxNeighborsConsidered: 4
+  autoFuseOnPlacement: 1
+  fusionParticlePrefab: {fileID: 7314526620251459061, guid: ccf28ea29cf499744ac31bab90073aba, type: 3}
+  fusionPulseDuration: 1.2
 --- !u!1 &1801780844
 GameObject:
   m_ObjectHideFlags: 0
@@ -7773,3 +7804,4 @@ SceneRoots:
   - {fileID: 826410418}
   - {fileID: 1626109322}
   - {fileID: 1789342360}
+  - {fileID: 515481055}

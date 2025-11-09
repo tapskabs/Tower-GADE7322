@@ -10,14 +10,13 @@ public class TowerFusionManager : MonoBehaviour
     public static TowerFusionManager Instance;
 
     [Header("Fusion Settings")]
-    public float fusionRadius = 4f;          // how far to search neighbours
-    [Range(0f, 1f)] public float fusionChance = 0.9f; // chance fusion triggers when requested
-    public int maxNeighborsConsidered = 4;
-    public bool autoFuseOnPlacement = true;
+    public float fusionRadius = 4f;                   // Distance threshold for fusion
+    public GameObject fusionParticlePrefab;           // FX for fusion event
+    public float fusionPulseDuration = 1.2f;          // FX lifetime
+    [Tooltip("How much faster the tower attacks after fusion (smaller = faster)")]
+    public float attackRateMultiplier = 0.5f;         // 0.5f = twice as fast
 
-    [Header("Visual")]
-    public GameObject fusionParticlePrefab;
-    public float fusionPulseDuration = 1.2f;
+    private readonly List<Tower> activeTowers = new List<Tower>();
 
     void Awake()
     {
@@ -25,75 +24,108 @@ public class TowerFusionManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    /// <summary>
-    /// Attempt to fuse the nearest tower cluster around a given tower.
-    /// Returns true if fusion applied.
-    /// </summary>
-    public bool TryFuse(ProceduralTower centre)
+    public void RegisterTower(Tower tower)
     {
-        if (centre == null) return false;
-        if (Random.value > fusionChance) return false;
+        if (tower != null && !activeTowers.Contains(tower))
+            activeTowers.Add(tower);
+    }
 
-        // find neighbors
-        Collider[] hits = Physics.OverlapSphere(centre.transform.position, fusionRadius);
-        List<ProceduralTower> neighbors = new List<ProceduralTower>();
-        foreach (var h in hits)
+    void Update()
+    {
+        DetectFusions();
+    }
+
+    void DetectFusions()
+    {
+        for (int i = 0; i < activeTowers.Count; i++)
         {
-            if (h == null) continue;
-            if (h.gameObject == centre.gameObject) continue;
+            Tower a = activeTowers[i];
+            if (a == null) continue;
 
-            ProceduralTower pt = h.GetComponentInParent<ProceduralTower>();
-            if (pt != null) neighbors.Add(pt);
+            for (int j = i + 1; j < activeTowers.Count; j++)
+            {
+                Tower b = activeTowers[j];
+                if (b == null) continue;
+
+                float dist = Vector3.Distance(a.transform.position, b.transform.position);
+
+                bool close = dist <= fusionRadius;
+                a.SetGlow(close);
+                b.SetGlow(close);
+
+                if (close)
+                {
+                    FuseTowers(a, b);
+                    return; // Prevent chain fusions in the same frame
+                }
+            }
+        }
+    }
+
+    void FuseTowers(Tower t1, Tower t2)
+    {
+        if (t1 == null || t2 == null) return;
+
+        // Play particle effect
+        if (fusionParticlePrefab)
+        {
+            GameObject fx = Instantiate(fusionParticlePrefab, t1.transform.position, Quaternion.identity);
+            Destroy(fx, fusionPulseDuration);
         }
 
-        if (neighbors.Count == 0) return false;
+        // Boost t1's attack rate (lower value = faster)
+        t1.attackRate *= attackRateMultiplier;
+        t1.attackRate = Mathf.Clamp(t1.attackRate, 0.1f, 10f); // Prevent unrealistic values
 
-        // limit neighbor count
-        if (neighbors.Count > maxNeighborsConsidered)
-            neighbors = neighbors.GetRange(0, maxNeighborsConsidered);
+        // Destroy the later-spawned tower
+        Destroy(t2.gameObject);
+        activeTowers.Remove(t2);
 
-        centre.FuseWithNeighbors(neighbors.ToArray());
+        Debug.Log($"[Fusion] {t1.name} fused with {t2.name}. New attack rate: {t1.attackRate}");
+    }
 
-        // play visual pulse
+
+    public bool FuseDestructive(Tower a, Tower b, float boost)
+    {
+        if (a == null || b == null) return false;
+        if (fusionParticlePrefab == null)
+            Debug.LogWarning("No fusion particle prefab assigned.");
+
+        // --- play fusion visual ---
+        Vector3 midpoint = (a.transform.position + b.transform.position) * 0.5f;
         if (fusionParticlePrefab != null)
         {
-            var fx = Instantiate(fusionParticlePrefab, centre.transform.position + Vector3.up * 0.6f, Quaternion.identity);
-            if (fx != null) Destroy(fx, fusionPulseDuration + 0.2f);
+            GameObject fx = Instantiate(fusionParticlePrefab, midpoint + Vector3.up * 0.5f, Quaternion.identity);
+            Destroy(fx, fusionPulseDuration);
         }
 
-        Debug.Log($"[Fusion] Fused {centre.name} with {neighbors.Count} neighbors. New profile: {centre.GetProfile()?.seedName}");
+        // --- choose survivor ---
+        Tower survivor = a;   // earlier tower survives
+        Tower toDestroy = b;  // later tower gets removed
+
+        // --- apply fusion effect ---
+        float appliedBoost = Mathf.Max(1f, boost); // ensure it’s never below 1
+        survivor.attackRate = Mathf.Max(0.1f, survivor.attackRate / appliedBoost); // faster rate
+        survivor.attackRange *= 1.05f; // slight range bonus
+
+        // optional: pulse glow to indicate fusion success
+        survivor.SetGlow(true);
+        survivor.Invoke(nameof(DisableGlowSafely), 0.6f);
+
+        // --- destroy the weaker one ---
+        if (toDestroy != null)
+            Destroy(toDestroy.gameObject);
+
+        Debug.Log($"[Fusion] {a.name} fused with {b.name}. Boost {appliedBoost:F2}, attack rate now {survivor.attackRate:F2}");
+
         return true;
     }
 
-    /// <summary>
-    /// Helper for UI to auto-fuse nearest cluster to screen center or to selected tower.
-    /// </summary>
-    public bool TryFuseNearest(Vector3 worldPos)
+    // Helper for glow disable
+    private void DisableGlowSafely()
     {
-        // find nearest ProceduralTower in scene
-        ProceduralTower[] all = FindObjectsOfType<ProceduralTower>();
-        ProceduralTower best = null;
-        float bestDist = float.MaxValue;
-        foreach (var t in all)
-        {
-            float d = Vector3.Distance(t.transform.position, worldPos);
-            if (d < bestDist)
-            {
-                bestDist = d;
-                best = t;
-            }
-        }
-
-        if (best == null) return false;
-        return TryFuse(best);
-    }
-
-    // Called by PlacementManager after placing a new tower (if autoFuseOnPlacement enabled)
-    public void OnTowerPlaced(ProceduralTower tower)
-    {
-        if (autoFuseOnPlacement)
-        {
-            TryFuse(tower);
-        }
+        Tower[] towers = FindObjectsOfType<Tower>();
+        foreach (var t in towers)
+            t.SetGlow(false);
     }
 }
