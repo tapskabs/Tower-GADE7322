@@ -17,9 +17,20 @@ public abstract class DefenderBase : MonoBehaviour
     public GameObject healthBarPrefab;
     protected EnemyHealthBar healthBar;
 
+    [Header("Visual Effects")]
+    public GameObject spawnVFX;     // Plays when defender is placed
+    public GameObject deathVFX;     // Plays when defender is destroyed
+    public GameObject impactVFX;    // Plays when defender attacks (optional)
+
     protected virtual void Start()
     {
         currentHealth = maxHealth;
+
+        // Play placement VFX
+        if (spawnVFX != null)
+        {
+            Instantiate(spawnVFX, transform.position, Quaternion.identity);
+        }
 
         // Spawn a floating healthbar
         if (healthBarPrefab != null)
@@ -43,6 +54,10 @@ public abstract class DefenderBase : MonoBehaviour
             {
                 Attack();
                 attackTimer = 0f;
+
+                // Optional attack VFX
+                if (impactVFX != null)
+                    Instantiate(impactVFX, targetEnemy.transform.position, Quaternion.identity);
             }
         }
 
@@ -53,6 +68,7 @@ public abstract class DefenderBase : MonoBehaviour
             healthBar.transform.position = screenPos;
         }
     }
+
     public interface IDamageableDefender
     {
         void ReceiveDamage(int dmg);
@@ -88,6 +104,9 @@ public abstract class DefenderBase : MonoBehaviour
 
         if (currentHealth <= 0)
         {
+            if (deathVFX != null)
+                Instantiate(deathVFX, transform.position, Quaternion.identity);
+
             if (healthBar != null)
                 Destroy(healthBar.gameObject);
 
