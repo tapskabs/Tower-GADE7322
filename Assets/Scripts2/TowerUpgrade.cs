@@ -18,11 +18,13 @@ public class TowerUpgrade : MonoBehaviour
 
     private int currentUpgradeLevel = 0;
     private Renderer towerRenderer;
+    private ProceduralTower proceduralTower;
 
     void Start()
     {
         if (tower == null) tower = GetComponent<Tower>();
         towerRenderer = tower.GetComponentInChildren<Renderer>();
+        proceduralTower = tower.GetComponent<ProceduralTower>();
 
         if (upgradeButton != null)
             upgradeButton.onClick.AddListener(UpgradeTower);
@@ -32,7 +34,6 @@ public class TowerUpgrade : MonoBehaviour
 
     void UpgradeTower()
     {
-        // Check if we can upgrade
         if (currentUpgradeLevel >= upgradeCosts.Length)
         {
             Debug.Log("Tower is already fully upgraded!");
@@ -46,13 +47,12 @@ public class TowerUpgrade : MonoBehaviour
             return;
         }
 
-        // Spend resources
         GameManager.Instance.SpendResources(cost);
 
-        // Apply upgrade
+        // Apply upgrade to base Tower stats
         tower.maxHealth += healthIncreases[currentUpgradeLevel];
         tower.damage += damageIncreases[currentUpgradeLevel];
-        tower.attackRate = Mathf.Max(0.1f, tower.attackRate + attackRateBoosts[currentUpgradeLevel]);
+        tower.attackRate = Mathf.Max(0.05f, tower.attackRate + attackRateBoosts[currentUpgradeLevel]);
 
         // Update visuals if materials exist
         if (upgradeMaterials != null && currentUpgradeLevel < upgradeMaterials.Length && towerRenderer != null)
@@ -62,6 +62,9 @@ public class TowerUpgrade : MonoBehaviour
 
         currentUpgradeLevel++;
         Debug.Log("Tower upgraded to level " + currentUpgradeLevel);
+
+        // Inform procedural tower to reapply multipliers (so profile applied on top of new base stats)
+        proceduralTower?.OnBaseStatsChanged();
 
         UpdateUpgradeUI();
     }

@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 3688959911056673869}
   - component: {fileID: 7125539431219246991}
   - component: {fileID: -5886803420309629052}
+  - component: {fileID: 1250127715907335718}
+  - component: {fileID: 8759232378493525830}
   m_Layer: 0
   m_Name: PosionDefender
   m_TagString: Defender
@@ -157,3 +159,46 @@ MonoBehaviour:
   - 1.6
   upgradeMaterials:
   - {fileID: 2100000, guid: 5064da6da2a5d7b4289825a4d022b649, type: 2}
+--- !u!114 &1250127715907335718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2044400662159651123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80d8e92817643434bbd5f02db89e79fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 200
+  attackRate: 1
+  attackRange: 10
+  damage: 15
+  impactVFX: {fileID: 0}
+  healthSlider: {fileID: 0}
+--- !u!114 &8759232378493525830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2044400662159651123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 815724842d79d38488d377494a9d9d2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  profile:
+    seedName: Variant
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    scaleMultiplier: 1
+    damageMultiplier: 1
+    attackRateMultiplier: 1
+    rangeMultiplier: 1
+    healthMultiplier: 1
+    slowChance: 0
+    poisonChance: 0
+    particlePrefab: {fileID: 0}
+  generateOnAwake: 1
+  randomSeed: 0
