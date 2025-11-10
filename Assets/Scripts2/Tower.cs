@@ -8,6 +8,7 @@ public class Tower : MonoBehaviour
     public float attackRange = 10f;
     public int damage = 15;
     public GameObject impactVFX;
+    public TowerGlow glow;
 
     [Header("UI")]
     public Slider healthSlider; 
@@ -96,5 +97,10 @@ public class Tower : MonoBehaviour
         {
             GameManager.Instance?.OnGameOver();
         }
+    }
+
+    public void SetGlow(bool state)
+    {
+        if (glow != null) glow.SetGlow(state);
     }
 }
