@@ -130,9 +130,9 @@ MonoBehaviour:
   attackRate: 1
   attackDamage: 10
   healthBarPrefab: {fileID: 5283748656744593292, guid: 0f29e7a60d3d94248ac55eaa2aca54cd, type: 3}
-  spawnVFX: {fileID: 0}
-  deathVFX: {fileID: 0}
-  impactVFX: {fileID: 0}
+  spawnVFX: {fileID: 1395313577031670, guid: c559c1920b5d04e6d83aa4464fba5c68, type: 3}
+  deathVFX: {fileID: 1082826025734650, guid: 42a3690e5d4a841ad958c0e3b9b7b19e, type: 3}
+  impactVFX: {fileID: 1082826025734650, guid: 10eef6400678c4c75b2ac94e435a2bd5, type: 3}
   poisonDamage: 2
   poisonDuration: 5
   tickRate: 1
