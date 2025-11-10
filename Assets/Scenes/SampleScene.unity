@@ -1609,6 +1609,10 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: -6361264500595097927, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
+      propertyPath: impactVFX
+      value: 
+      objectReference: {fileID: 1082826025734650, guid: 42a3690e5d4a841ad958c0e3b9b7b19e, type: 3}
+    - target: {fileID: -6361264500595097927, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
       propertyPath: healthSlider
       value: 
       objectReference: {fileID: 884869500}
@@ -8666,10 +8670,10 @@ MonoBehaviour:
   attackRange: 8
   attackRate: 1
   damage: 20
-  impactVFX: {fileID: 0}
+  impactVFX: {fileID: 1082826025734650, guid: 10eef6400678c4c75b2ac94e435a2bd5, type: 3}
   healthBarPrefab: {fileID: 5283748656744593292, guid: 0f29e7a60d3d94248ac55eaa2aca54cd, type: 3}
-  placementVFX: {fileID: 0}
-  deathVFX: {fileID: 0}
+  placementVFX: {fileID: 1395313577031670, guid: c559c1920b5d04e6d83aa4464fba5c68, type: 3}
+  deathVFX: {fileID: 1082826025734650, guid: 42a3690e5d4a841ad958c0e3b9b7b19e, type: 3}
 --- !u!114 &340684005034351712
 MonoBehaviour:
   m_ObjectHideFlags: 0
