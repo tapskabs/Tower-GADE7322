@@ -130,6 +130,9 @@ MonoBehaviour:
   attackRate: 1
   attackDamage: 10
   healthBarPrefab: {fileID: 5283748656744593292, guid: 0f29e7a60d3d94248ac55eaa2aca54cd, type: 3}
+  spawnVFX: {fileID: 0}
+  deathVFX: {fileID: 0}
+  impactVFX: {fileID: 0}
   poisonDamage: 2
   poisonDuration: 5
   tickRate: 1
@@ -158,7 +161,8 @@ MonoBehaviour:
   - 1.3
   - 1.6
   upgradeMaterials:
-  - {fileID: 2100000, guid: 5064da6da2a5d7b4289825a4d022b649, type: 2}
+  - {fileID: 2100000, guid: d19c5435b03e31548a162b9be58912e8, type: 2}
+  - {fileID: 2100000, guid: 8b7ccac6cabc8ab46b43539ed0ba5116, type: 2}
 --- !u!114 &1250127715907335718
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -176,7 +180,9 @@ MonoBehaviour:
   attackRange: 10
   damage: 15
   impactVFX: {fileID: 0}
+  glow: {fileID: 0}
   healthSlider: {fileID: 0}
+  currentHealth: 0
 --- !u!114 &8759232378493525830
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -202,3 +208,4 @@ MonoBehaviour:
     particlePrefab: {fileID: 0}
   generateOnAwake: 1
   randomSeed: 0
+  spawnTime: 0

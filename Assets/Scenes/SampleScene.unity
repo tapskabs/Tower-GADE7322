@@ -1616,6 +1616,18 @@ PrefabInstance:
       propertyPath: randomSeed
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2864310621737420241, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
+      propertyPath: upgradeMaterials.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2864310621737420241, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
+      propertyPath: 'upgradeMaterials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: a33edf12f3c0044e8ba582a16ddaae3f, type: 2}
+    - target: {fileID: 2864310621737420241, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
+      propertyPath: 'upgradeMaterials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 6fe9580bd67b34580977e0aa4eab9755, type: 2}
     - target: {fileID: 2936986552467166828, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
       propertyPath: m_Name
       value: Tower
@@ -2460,7 +2472,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 384131655}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74f1a6a6f829f6740af01a3cdda79556, type: 3}
   m_Name: 
@@ -2474,8 +2486,7 @@ MonoBehaviour:
   attackRateBoosts:
   - -0.2
   - -0.3
-  upgradeMaterials:
-  - {fileID: 2100000, guid: babcd4bbd81ccf44cb242acbbe281873, type: 2}
+  upgradeMaterials: []
 --- !u!114 &384131660 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: -6361264500595097927, guid: 6d4e8b74e2f3b604ebc40a06422ef3dd, type: 3}
@@ -7468,7 +7479,8 @@ MonoBehaviour:
   - -0.2
   - -0.3
   upgradeMaterials:
-  - {fileID: 2100000, guid: babcd4bbd81ccf44cb242acbbe281873, type: 2}
+  - {fileID: 2100000, guid: 6fe9580bd67b34580977e0aa4eab9755, type: 2}
+  - {fileID: 2100000, guid: a33edf12f3c0044e8ba582a16ddaae3f, type: 2}
 --- !u!1 &1747729571
 GameObject:
   m_ObjectHideFlags: 0
@@ -8488,12 +8500,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9172563802809479171, guid: 5ae0e3366249d3c4b8dd17a8f07ed935, type: 3}
       propertyPath: upgradeMaterials.Array.size
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 9172563802809479171, guid: 5ae0e3366249d3c4b8dd17a8f07ed935, type: 3}
       propertyPath: 'upgradeMaterials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: babcd4bbd81ccf44cb242acbbe281873, type: 2}
+      objectReference: {fileID: 2100000, guid: 311e9e13c6c7eb647bbd5570e78f0305, type: 2}
+    - target: {fileID: 9172563802809479171, guid: 5ae0e3366249d3c4b8dd17a8f07ed935, type: 3}
+      propertyPath: 'upgradeMaterials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: d90b76c3ac5257e4e8810bdb6e36e0af, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -8563,7 +8579,8 @@ MonoBehaviour:
   - 1.3
   - 1.6
   upgradeMaterials:
-  - {fileID: 2100000, guid: babcd4bbd81ccf44cb242acbbe281873, type: 2}
+  - {fileID: 2100000, guid: 311e9e13c6c7eb647bbd5570e78f0305, type: 2}
+  - {fileID: 2100000, guid: d90b76c3ac5257e4e8810bdb6e36e0af, type: 2}
 --- !u!1001 &1006426823646599252
 PrefabInstance:
   m_ObjectHideFlags: 0
