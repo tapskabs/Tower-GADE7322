@@ -7180,7 +7180,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fusionRadius: 6
-  fusionParticlePrefab: {fileID: 7314526620251459061, guid: ccf28ea29cf499744ac31bab90073aba, type: 3}
+  fusionParticlePrefab: {fileID: 8435158498981334725, guid: d3eac3a8597f8644c9a17484d5d3604d, type: 3}
   fusionPulseDuration: 1.2
   attackRateMultiplier: 0.5
 --- !u!1 &1801780844
