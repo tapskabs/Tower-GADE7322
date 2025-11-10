@@ -5,9 +5,9 @@ using System.Collections;
 public class TowerRingSpawner : MonoBehaviour
 {
     [Header("References")]
-    public Tower mainTower; // central tower
-    public GameObject towerPrefab; // prefab with Tower + ProceduralTower
-    public Transform[] ringNodes; // optional fixed nodes
+    public Tower mainTower;
+    public GameObject towerPrefab;
+    public Transform[] ringNodes;
 
     [Header("Spawn Settings")]
     public float baseRadius = 3.5f;
@@ -17,7 +17,7 @@ public class TowerRingSpawner : MonoBehaviour
     public float spawnDelay = 0.2f;
 
     [Header("Fusion Settings")]
-    public bool attemptDestructiveFusionOnSpawn = true;
+    public bool attemptDestructiveFusionOnSpawn = false; // disable instant fusion
     [Range(2, 3)] public int lowWaveBoost = 2;
     [Range(2, 3)] public int highWaveBoost = 3;
     public GameObject spawnParticlePrefab;
@@ -45,7 +45,7 @@ public class TowerRingSpawner : MonoBehaviour
         StartCoroutine(SpawnRingRoutine(count, radius, difficulty, waveIndex));
     }
 
-    private IEnumerator SpawnRingRoutine(int count, float radius, float difficulty, int waveIndex)
+    private IEnumerator<WaitForSeconds> SpawnRingRoutine(int count, float radius, float difficulty, int waveIndex)
     {
         for (int i = 0; i < count; i++)
         {
@@ -62,17 +62,18 @@ public class TowerRingSpawner : MonoBehaviour
             }
 
             if (map != null)
-                pos.y = map.GetHeightAt(pos.x, pos.z) + 0.5f; // spawn slightly above terrain
+                pos.y = map.GetHeightAt(pos.x, pos.z) + 0.5f;
 
             GameObject towerObj = Instantiate(towerPrefab, pos, Quaternion.identity, transform);
-
             Tower towerComp = towerObj.GetComponent<Tower>();
-            ProceduralTower proceduralComp = towerObj.GetComponent<ProceduralTower>();
-            if (proceduralComp != null)
+
+            // add gentle motion for fusion opportunities
+            if (towerObj.GetComponent<TowerMovement>() == null)
             {
-                proceduralComp.SetSpawnTime(Time.time + waveIndex * 0.01f);
-                if (proceduralComp.GetProfile() == null) proceduralComp.GenerateRandomProfile();
+                towerObj.AddComponent<TowerMovement>().moveRadius = 1f;
             }
+
+            TowerFusionManager.Instance?.RegisterTower(towerComp);
 
             if (spawnParticlePrefab != null)
             {
@@ -80,38 +81,7 @@ public class TowerRingSpawner : MonoBehaviour
                 Destroy(fx, 2f);
             }
 
-            // --- Fusion on spawn with small delay to avoid timing issues ---
-            if (attemptDestructiveFusionOnSpawn && proceduralComp != null && towerComp != null)
-            {
-                int boost = (difficulty > 1.6f) ? highWaveBoost : lowWaveBoost;
-                StartCoroutine(DelayedFusion(towerComp, boost));
-            }
-
             yield return new WaitForSeconds(spawnDelay);
         }
-    }
-
-    private IEnumerator DelayedFusion(Tower towerComp, int boost)
-    {
-        yield return new WaitForSeconds(0.05f); // short delay
-
-        Tower nearest = null;
-        float bestDist = Mathf.Infinity;
-
-        foreach (var t in TowerFusionManager.Instance.GetActiveTowers())
-        {
-            if (t == towerComp) continue;
-            float d = Vector3.Distance(t.transform.position, towerComp.transform.position);
-            if (d < bestDist)
-            {
-                bestDist = d;
-                nearest = t;
-            }
-        }
-
-        if (nearest != null)
-            TowerFusionManager.Instance.FuseDestructive(nearest, towerComp, boost);
-
-        TowerFusionManager.Instance.RegisterTower(towerComp); // make sure this tower is tracked
     }
 }

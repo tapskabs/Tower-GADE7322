@@ -13,7 +13,6 @@ public class TowerFusionManager : MonoBehaviour
     public float fusionRadius = 4f;
     public GameObject fusionParticlePrefab;
     public float fusionPulseDuration = 1.2f;
-    [Tooltip("How much faster the tower attacks after fusion (smaller = faster)")]
     public float attackRateMultiplier = 0.5f;
 
     private readonly List<Tower> activeTowers = new List<Tower>();
@@ -24,6 +23,7 @@ public class TowerFusionManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    // --- PUBLIC API ---
     public void RegisterTower(Tower tower)
     {
         if (tower != null && !activeTowers.Contains(tower))
@@ -36,53 +36,9 @@ public class TowerFusionManager : MonoBehaviour
             activeTowers.Remove(tower);
     }
 
-    void Update()
+    public List<Tower> GetActiveTowers()
     {
-        DetectFusions();
-    }
-
-    private void DetectFusions()
-    {
-        for (int i = 0; i < activeTowers.Count; i++)
-        {
-            Tower a = activeTowers[i];
-            if (a == null) continue;
-
-            for (int j = i + 1; j < activeTowers.Count; j++)
-            {
-                Tower b = activeTowers[j];
-                if (b == null) continue;
-
-                float dist = Vector3.Distance(a.transform.position, b.transform.position);
-                bool close = dist <= fusionRadius;
-
-                a.SetGlow(close);
-                b.SetGlow(close);
-
-                if (close)
-                {
-                    FuseTowers(a, b);
-                    return; // prevent chain fusion in same frame
-                }
-            }
-        }
-    }
-
-    private void FuseTowers(Tower t1, Tower t2)
-    {
-        if (t1 == null || t2 == null) return;
-
-        if (fusionParticlePrefab != null)
-        {
-            GameObject fx = Instantiate(fusionParticlePrefab, t1.transform.position, Quaternion.identity);
-            Destroy(fx, fusionPulseDuration);
-        }
-
-        t1.attackRate *= attackRateMultiplier;
-        t1.attackRate = Mathf.Clamp(t1.attackRate, 0.1f, 10f);
-
-        Destroy(t2.gameObject);
-        UnregisterTower(t2);
+        return activeTowers;
     }
 
     public bool FuseDestructive(Tower a, Tower b, float boost)
@@ -96,28 +52,43 @@ public class TowerFusionManager : MonoBehaviour
             Destroy(fx, fusionPulseDuration);
         }
 
-        Tower survivor = a;
-        Tower toDestroy = b;
+        // Merge logic: improve one, destroy the other
+        a.attackRate *= attackRateMultiplier / Mathf.Max(1f, boost * 0.3f);
+        a.attackRate = Mathf.Clamp(a.attackRate, 0.1f, 10f);
+        a.attackRange *= 1.05f;
 
-        survivor.attackRate = Mathf.Max(0.1f, survivor.attackRate / Mathf.Max(1f, boost));
-        survivor.attackRange *= 1.05f;
-        survivor.SetGlow(true);
-        survivor.Invoke(nameof(DisableGlowSafely), 0.6f);
-
-        if (toDestroy != null)
-        {
-            Destroy(toDestroy.gameObject);
-            UnregisterTower(toDestroy);
-        }
+        UnregisterTower(b);
+        Destroy(b.gameObject);
 
         return true;
     }
 
-    private void DisableGlowSafely()
+    // --- AUTO FUSION LOOP ---
+    void Update()
     {
-        foreach (var t in FindObjectsOfType<Tower>())
-            t.SetGlow(false);
+        DetectFusions();
     }
 
-    public List<Tower> GetActiveTowers() => activeTowers;
+    private void DetectFusions()
+    {
+        Tower[] towers = activeTowers.ToArray();
+        for (int i = 0; i < towers.Length; i++)
+        {
+            Tower a = towers[i];
+            if (a == null) continue;
+
+            for (int j = i + 1; j < towers.Length; j++)
+            {
+                Tower b = towers[j];
+                if (b == null) continue;
+
+                float dist = Vector3.Distance(a.transform.position, b.transform.position);
+                if (dist <= fusionRadius)
+                {
+                    FuseDestructive(a, b, 2f);
+                    return; // prevent chain reactions same frame
+                }
+            }
+        }
+    }
 }
