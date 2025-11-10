@@ -67,22 +67,14 @@ public class Tower : MonoBehaviour
     }
     public void RestoreFullHealth()
     {
-        // access the private currentHealth field which exists in this class
-        // (we are inside Tower so this is allowed)
-        // set it to maxHealth and update UI
-        // note: currentHealth is already in your class; this method uses it.
-        var currentHealthField = typeof(Tower).GetField("currentHealth", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        if (currentHealthField != null)
-        {
-            currentHealthField.SetValue(this, maxHealth);
-        }
-        // Update GameManager UI if available
-        GameManager.Instance?.UpdateTowerHealth(maxHealth, maxHealth);
+        currentHealth = maxHealth;
 
-        // Update local slider if present
+        GameManager.Instance?.UpdateTowerHealth(currentHealth, maxHealth);
+
         if (healthSlider != null)
             healthSlider.value = 1f;
     }
+
     public void TakeDamage(int dmg)
     {
         currentHealth -= dmg;
