@@ -1834,6 +1834,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 224045402}
   m_CullTransparentMesh: 1
+--- !u!1 &228435467
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 228435469}
+  - component: {fileID: 228435468}
+  m_Layer: 0
+  m_Name: TowerHealthEffect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &228435468
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 228435467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88ce9d1f357a61e44b216e1a7b653773, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  overlayImage: {fileID: 1709756048}
+  fadeSpeed: 1
+  healthThreshold: 0.3
+  maxAlpha: 0.5
+  tower: {fileID: 332533633}
+--- !u!4 &228435469
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 228435467}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 600.18677, y: 331.03033, z: 0.3542447}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &230741807 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2044400662159651123, guid: 510026aef5dcd7a4eba41f2b4496955e, type: 3}
@@ -7521,7 +7570,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1709756046
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7538,8 +7587,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: 0, y: 0.0025024}
+  m_SizeDelta: {x: 1309, y: 623.51}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1709756047
 MonoBehaviour:
@@ -7548,13 +7597,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1709756045}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 88ce9d1f357a61e44b216e1a7b653773, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   overlayImage: {fileID: 1709756048}
-  fadeSpeed: 3
+  fadeSpeed: 1
   healthThreshold: 0.3
   maxAlpha: 0.5
   tower: {fileID: 332533633}
@@ -9177,3 +9226,4 @@ SceneRoots:
   - {fileID: 612759851}
   - {fileID: 374518143}
   - {fileID: 1035955993}
+  - {fileID: 228435469}
