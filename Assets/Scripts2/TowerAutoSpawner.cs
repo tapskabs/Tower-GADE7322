@@ -4,33 +4,26 @@ using System.Collections;
 
 public class TowerAutoSpawner : MonoBehaviour
 {
-    [Header("Tower Spawn Settings")]
-    public GameObject towerPrefab;          // Your single tower prefab
-    public Tower mainTower;                 // The central base tower
+    [Header("References")]
+    public Tower mainTower;
+    public GameObject towerPrefab;
+    public TowerFusionManager fusionManager;
+
+    [Header("Spawn Settings")]
     public int baseTowersPerWave = 3;
     public float baseRadius = 8f;
     public float spawnDelay = 0.3f;
 
-    [Header("References")]
-    public TowerFusionManager fusionManager;
-    public ProceduralWaveManager waveManager;
-
-    private readonly List<Tower> spawnedTowers = new List<Tower>();
+    private List<Tower> spawnedTowers = new List<Tower>();
 
     void Start()
     {
+        if (mainTower == null) mainTower = FindObjectOfType<Tower>();
         if (fusionManager == null) fusionManager = FindObjectOfType<TowerFusionManager>();
-        if (waveManager == null) waveManager = FindObjectOfType<ProceduralWaveManager>();
     }
 
     public void SpawnTowersForWave(int waveIndex)
     {
-        if (towerPrefab == null || mainTower == null)
-        {
-            Debug.LogWarning("TowerAutoSpawner: Missing tower prefab or main tower reference!");
-            return;
-        }
-
         StartCoroutine(SpawnTowersRoutine(waveIndex));
     }
 
