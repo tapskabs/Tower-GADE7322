@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 4ddd19877b1e1234ca54a17a9dd73e76, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -2184,7 +2184,7 @@ Transform:
   m_GameObject: {fileID: 374518137}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 38.57, y: 5.83, z: 34.67}
+  m_LocalPosition: {x: 40.31, y: 5.83, z: 28.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3027,7 +3027,7 @@ MonoBehaviour:
   - {fileID: 612759851}
   - {fileID: 374518143}
   baseRadius: 3.5
-  baseCount: 2
+  baseCount: 3
   radiusPerDifficulty: 1.2
   extraCountPerDifficultyStep: 1
   spawnDelay: 0.2
@@ -3240,7 +3240,7 @@ Transform:
   m_GameObject: {fileID: 519589848}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 39.63, y: 5.83, z: 44.66}
+  m_LocalPosition: {x: 39.95, y: 5.83, z: 50.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3519,7 +3519,7 @@ Transform:
   m_GameObject: {fileID: 612759845}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 45.91, y: 5.83, z: 38.17}
+  m_LocalPosition: {x: 54.18, y: 5.83, z: 38.17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4265,7 +4265,7 @@ Transform:
   m_GameObject: {fileID: 805512449}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 33.42, y: 5.83, z: 38.17}
+  m_LocalPosition: {x: 30.09, y: 5.83, z: 39.91}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5104,9 +5104,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9d71cabbb1dbd042aa7597f32839694, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  basicEnemyPrefab: {fileID: 8144405171429340608, guid: cbc4a46ff44be3843a7283daec6568c9, type: 3}
-  tankEnemyPrefab: {fileID: 6004725472103082688, guid: 7e98dd32eccdfc146919423f8b9b387c, type: 3}
-  splitterEnemyPrefab: {fileID: 5323608672454271934, guid: bae856e6a96327d46a62a93967bbb237, type: 3}
+  basicEnemyPrefab: {fileID: 5281750346822813271, guid: 5dd7c2966e6530443806b156263307ee, type: 3}
+  tankEnemyPrefab: {fileID: 7173000826386155260, guid: 3faecf0ba0dbb184988e1812a97e774c, type: 3}
+  splitterEnemyPrefab: {fileID: 4829377624782831748, guid: 437ba413a5ca60e4cb0d9737ecb6d5dd, type: 3}
   map: {fileID: 1128160463}
   tower: {fileID: 332533633}
   spawnInterval: 2.5
