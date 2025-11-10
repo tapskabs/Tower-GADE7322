@@ -12,7 +12,7 @@ public class Tower : MonoBehaviour
     [Header("UI")]
     public Slider healthSlider; 
 
-    private int currentHealth;
+    public int currentHealth;
     private float attackTimer;
 
     void Start()
